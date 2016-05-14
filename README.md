@@ -103,6 +103,6 @@ int NoFLA_HQRRP_UT_blk_var5( int m_A, int n_A, double * buff_A, int ldim_A,
 ```
 
 These two routines are stored in the file `NoFLA_HQRRP_WY_blk_var5.c`.
-File `simple_test.c` contain a main program to test routine `dgeqp4`.
+The file `simple_test.c` contain a main program to test routine `dgeqp4`.
 
 
