@@ -79,9 +79,8 @@ We will appreciate feedback from the community on the use of this code.
 
 ## Details
 
-The new code contains the following two routines:
+The new code contains the following two main routines:
 
-% -----------------------------------------------------------------------------
 ```
 void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
          double * work, int * lwork, int * info );
@@ -101,7 +100,9 @@ int NoFLA_HQRRP_UT_blk_var5( int m_A, int n_A, double * buff_A, int ldim_A,
 // It computes the new HQRRP and allows the user to fine tune more arguments,
 // such as the block size, oversampling, etc.
 //
-
 ```
-% -----------------------------------------------------------------------------
+
+These two routines are stored in the file `NoFLA_HQRRP_WY_blk_var5.c`.
+File `simple_test.c` contain a main program to test routine `dgeqp4`.
+
 
