@@ -1,42 +1,42 @@
-# hqrrp
+# HQRRP
 
 ## Authors
 
-* Per-Gunnar Martinsson
+* Per-Gunnar Martinsson,
   Dept. of Applied Mathematics,
   University of Colorado at Boulder,
-  526 UCB, Boulder, CO 80309-0526, USA
+  526 UCB, Boulder, CO 80309-0526, USA.
 
-* Gregorio Quintana-Orti
+* Gregorio Quintana-Orti,
   Depto. de Ingenieria y Ciencia de Computadores,
   Universitat Jaume I,
-  12.071 Castellon, Spain
+  12.071 Castellon, Spain.
 
-* Nathan Heavner
+* Nathan Heavner,
   Dept. of Applied Mathematics,
   University of Colorado at Boulder,
-  526 UCB, Boulder, CO 80309-0526, USA
+  526 UCB, Boulder, CO 80309-0526, USA.
 
-* Robert van de Geijn
+* Robert van de Geijn,
   Dept. of Computer Science and Institute for Computational Engineering and
   Sciences,
-  The University of Texas at Austin
-  Austin, TX.
+  The University of Texas at Austin,
+  Austin, TX, USA.
   
 ## Correspondence
 
 Please send correspondence about the code to 
-Gregorio Quintana-Ortí <gquintan@icc.uji.es>
+Gregorio Quintana-Ortí: <gquintan@icc.uji.es>
 
 Correspondence about the paper should be sent to
-Per-Gunnar J. Martinsson <Per-gunnar.Martinsson@colorado.edu>
+Per-Gunnar J. Martinsson: <Per-gunnar.Martinsson@colorado.edu>
 
 ## Disclaimer
 
 This code is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY EXPRESSED OR IMPLIED. 
 
-## README
+## Description
 
 Householder transformation based QR factorization with column pivoting is an 
 important algorithm for, for example, determining an approximate basis for 
@@ -82,6 +82,7 @@ We will appreciate feedback from the community on the use of this code.
 The new code contains the following two routines:
 
 % -----------------------------------------------------------------------------
+```
 void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
          double * work, int * lwork, int * info );
 // 
@@ -101,5 +102,6 @@ int NoFLA_HQRRP_UT_blk_var5( int m_A, int n_A, double * buff_A, int ldim_A,
 // such as the block size, oversampling, etc.
 //
 
+```
 % -----------------------------------------------------------------------------
 
