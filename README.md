@@ -22,7 +22,7 @@
   Sciences,
   The University of Texas at Austin,
   Austin, TX, USA.
-  
+
 ## Correspondence
 
 Please send correspondence about the code to 
@@ -30,6 +30,11 @@ Gregorio Quintana-Ortí: <gquintan@icc.uji.es>
 
 Correspondence about the paper should be sent to
 Per-Gunnar J. Martinsson: <Per-gunnar.Martinsson@colorado.edu>
+
+## License
+
+New 3-clause BSD.
+See file License.txt for more details.
 
 ## Disclaimer
 
@@ -77,6 +82,10 @@ https://github.com/flame/libflame/
 
 We will appreciate feedback from the community on the use of this code.
 
+## Performance benefit
+
+![alt tag](./speedup.png)
+
 ## Details
 
 The new code contains the following two main routines:
@@ -89,7 +98,7 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
 // It computes the new HQRRP while keeping the same header as LAPACK's dgeqp3.
 // It uses dgeqpf or dgeqp3 for small matrices. The thresholds are defined in
 // constants THRESHOLD_FOR_DGEQPF and THRESHOLD_FOR_DGEQP3.
-// This routtine calls the next one with block size 64 and oversamplig 10.
+// This routtine calls the next one with block size 64 and oversampling 10.
 //
 
 int NoFLA_HQRRP_UT_blk_var5( int m_A, int n_A, double * buff_A, int ldim_A,
