@@ -5,10 +5,9 @@ License
 The HQRRP software is licensed under the following license, typically
 known as the "new" or "modified" or "3-clause" BSD license.
 
-
 Copyright (C) 2016, 
-  University of Colorado at Boulder,
   Universitat Jaume I,
+  University of Colorado at Boulder,
   The University of Texas at Austin.
 
 Redistribution and use in source and binary forms, with or without
@@ -34,3 +33,4 @@ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+

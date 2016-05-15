@@ -22,8 +22,6 @@
   Sciences,
   The University of Texas at Austin,
   Austin, TX, USA.
-  
-
 
 ## Correspondence
 
@@ -32,6 +30,11 @@ Gregorio Quintana-Ortí: <gquintan@icc.uji.es>
 
 Correspondence about the paper should be sent to
 Per-Gunnar J. Martinsson: <Per-gunnar.Martinsson@colorado.edu>
+
+## License
+
+New 3-clause BSD.
+See file License.txt for more details.
 
 ## Disclaimer
 
