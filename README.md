@@ -23,6 +23,8 @@
   The University of Texas at Austin,
   Austin, TX, USA.
   
+
+
 ## Correspondence
 
 Please send correspondence about the code to 
@@ -76,6 +78,10 @@ transform will eventually be included in the libflame library:
 https://github.com/flame/libflame/
 
 We will appreciate feedback from the community on the use of this code.
+
+## Performance benefit
+
+![alt tag](./speedup.png)
 
 ## Details
 
