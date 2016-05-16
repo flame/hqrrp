@@ -25,6 +25,15 @@ Robert van de Geijn
   Austin, TX.
 
 ===============================================================================
+Copyright
+===============================================================================
+
+Copyright (C) 2016, 
+  Universitat Jaume I,
+  University of Colorado at Boulder,
+  The University of Texas at Austin.
+
+===============================================================================
 Disclaimer
 ===============================================================================
 
@@ -36,7 +45,7 @@ WITHOUT ANY WARRANTY EXPRESSED OR IMPLIED.
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "NoFLA_HQRRP_WY_blk_var5.h"
+#include "NoFLA_HQRRP_WY_blk_var4.h"
 
 
 // Matrices with dimensions smaller than THRESHOLD_FOR_DGEQPF are processed 
@@ -79,17 +88,17 @@ static int NoFLA_Downdate_Y(
                int m_G1, int n_G1, double * buff_G1, int ldim_G1,
                int m_G2, int n_G2, double * buff_G2, int ldim_G2 );
 
-static int NoFLA_Apply_Q_WY_lhfc_blk_var5( 
+static int NoFLA_Apply_Q_WY_lhfc_blk_var4( 
                int m_U, int n_U, double * buff_U, int ldim_U,
                int m_T, int n_T, double * buff_T, int ldim_T,
                int m_B, int n_B, double * buff_B, int ldim_B );
 
-static int NoFLA_Apply_Q_WY_rnfc_blk_var5( 
+static int NoFLA_Apply_Q_WY_rnfc_blk_var4( 
                int m_U, int n_U, double * buff_U, int ldim_U,
                int m_T, int n_T, double * buff_T, int ldim_T,
                int m_B, int n_B, double * buff_B, int ldim_B );
 
-static int NoFLA_QRPmod_WY_unb_var5( int pivoting, int num_stages, 
+static int NoFLA_QRPmod_WY_unb_var4( int pivoting, int num_stages, 
                int m_A, int n_A, double * buff_A, int ldim_A,
                int * buff_p, double * buff_t, 
                int pivot_B, int m_B, double * buff_B, int ldim_B,
@@ -247,7 +256,7 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
   // nb_alg = 64, pp = 10, panel_pivoting = 1.
  
   if( num_factorized_fixed_cols < mn_A ) {
-    * info = NoFLA_HQRRP_WY_blk_var5( 
+    * info = NoFLA_HQRRP_WY_blk_var4( 
         m_A - num_factorized_fixed_cols, n_A - num_factorized_fixed_cols, 
         & A[ num_factorized_fixed_cols + num_factorized_fixed_cols * ldim_A ], 
             ldim_A,
@@ -291,7 +300,7 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
 }
 
 // ============================================================================
-int NoFLA_HQRRP_WY_blk_var5( int m_A, int n_A, double * buff_A, int ldim_A,
+int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
         int * buff_jpvt, double * buff_tau,
         int nb_alg, int pp, int panel_pivoting ) {
 //
@@ -343,18 +352,18 @@ int NoFLA_HQRRP_WY_blk_var5( int m_A, int n_A, double * buff_A, int ldim_A,
   double  d_one  = 1.0;
 
   // Executable Statements.
-  //// printf( "%% NoFLA_HQRRP_WY_blk_var5.\n" );
+  //// printf( "%% NoFLA_HQRRP_WY_blk_var4.\n" );
 
   // Check arguments.
   if( m_A < 0 ) {
     fprintf( stderr, 
-             "ERROR in NoFLA_HQRRP_WY_blk_var5: m_A is < 0.\n" );
+             "ERROR in NoFLA_HQRRP_WY_blk_var4: m_A is < 0.\n" );
   } if( n_A < 0 ) {
     fprintf( stderr, 
-             "ERROR in NoFLA_HQRRP_WY_blk_var5: n_A is < 0.\n" );
+             "ERROR in NoFLA_HQRRP_WY_blk_var4: n_A is < 0.\n" );
   } if( ldim_A < max( 1, m_A ) ) {
     fprintf( stderr, 
-             "ERROR in NoFLA_HQRRP_WY_blk_var5: ldim_A is < max( 1, m_A ).\n" );
+             "ERROR in NoFLA_HQRRP_WY_blk_var4: ldim_A is < max( 1, m_A ).\n" );
   }
 
   // Some initializations.
@@ -452,10 +461,10 @@ int NoFLA_HQRRP_WY_blk_var5( int m_A, int n_A, double * buff_A, int ldim_A,
       //// FLA_Merge_2x1( ATR,
       ////                ABR,   & AR );
       //// FLA_Copy( YR, VR );
-      //// FLA_QRPmod_WY_unb_var5( 0, bRow, VR, pB, sB, 1, AR, 1, YR, 0, None );
+      //// FLA_QRPmod_WY_unb_var4( 0, bRow, VR, pB, sB, 1, AR, 1, YR, 0, None );
       dlacpy_( "All", & m_V, & n_VR, buff_YR, & ldim_Y,
                                      buff_VR, & ldim_V );
-      NoFLA_QRPmod_WY_unb_var5( 0, b,
+      NoFLA_QRPmod_WY_unb_var4( 0, b,
           m_V, n_VR, buff_VR, ldim_V,
           buff_pB, buff_sB,
           1, m_A, buff_AR, ldim_A,
@@ -472,7 +481,7 @@ int NoFLA_HQRRP_WY_blk_var5( int m_A, int n_A, double * buff_A, int ldim_A,
     ////                     & None,    b, FLA_TOP );
     //// FLA_Merge_2x1( A11,
     ////                A21,   & AB1 );
-    //// FLA_QRPmod_WY_unb_var5( panel_pivoting, -1, AB1, p1, s1, 
+    //// FLA_QRPmod_WY_unb_var4( panel_pivoting, -1, AB1, p1, s1, 
     ////                         1, A01, 1, Y1, 1, T1_T );
     m_AB1     = m_A - j;
     n_AB1     = b;
@@ -483,7 +492,7 @@ int NoFLA_HQRRP_WY_blk_var5( int m_A, int n_A, double * buff_A, int ldim_A,
     buff_Y1   = & buff_Y[ 0 + j * ldim_Y ];
     buff_T1_T = & buff_W[ 0 + j * ldim_W ];
     ldim_T1_T = ldim_W;
-    NoFLA_QRPmod_WY_unb_var5( panel_pivoting, -1,
+    NoFLA_QRPmod_WY_unb_var4( panel_pivoting, -1,
         m_AB1, n_AB1, buff_AB1, ldim_A,
         buff_p1, buff_s1,
         1, j, buff_A01, ldim_A,
@@ -516,9 +525,9 @@ int NoFLA_HQRRP_WY_blk_var5( int m_A, int n_A, double * buff_A, int ldim_A,
       //   / A12 \ := QB1' / A12 \
       //   \ A22 /         \ A22 /
       // where QB1 is formed from AB1 and T1_T.
-      //// MyFLA_Apply_Q_WY_lhfc_blk_var5( A11, A21, T1_T, A12, A22 );
+      //// MyFLA_Apply_Q_WY_lhfc_blk_var4( A11, A21, T1_T, A12, A22 );
 
-      NoFLA_Apply_Q_WY_lhfc_blk_var5( 
+      NoFLA_Apply_Q_WY_lhfc_blk_var4( 
           m_A11 + m_A21, n_A11, buff_A11, ldim_A,
           b, b, buff_T1_T, ldim_W,
           m_A12 + m_A22, n_A12, buff_A12, ldim_A );
@@ -686,7 +695,7 @@ static int NoFLA_Downdate_Y(
   //
   // GR = GR * Q
   //
-  NoFLA_Apply_Q_WY_rnfc_blk_var5( 
+  NoFLA_Apply_Q_WY_rnfc_blk_var4( 
           m_U11 + m_U21, n_U11, buff_U11, ldim_U11,
           m_T, n_T, buff_T, ldim_T,
           m_G1, n_G1 + n_G2, buff_G1, ldim_G1 );
@@ -699,7 +708,7 @@ static int NoFLA_Downdate_Y(
 }
 
 // ============================================================================
-static int NoFLA_Apply_Q_WY_lhfc_blk_var5( 
+static int NoFLA_Apply_Q_WY_lhfc_blk_var4( 
                int m_U, int n_U, double * buff_U, int ldim_U,
                int m_T, int n_T, double * buff_T, int ldim_T,
                int m_B, int n_B, double * buff_B, int ldim_B ) {
@@ -731,7 +740,7 @@ static int NoFLA_Apply_Q_WY_lhfc_blk_var5(
 }
 
 // ============================================================================
-static int NoFLA_Apply_Q_WY_rnfc_blk_var5( 
+static int NoFLA_Apply_Q_WY_rnfc_blk_var4( 
                int m_U, int n_U, double * buff_U, int ldim_U,
                int m_T, int n_T, double * buff_T, int ldim_T,
                int m_B, int n_B, double * buff_B, int ldim_B ) {
@@ -762,7 +771,7 @@ static int NoFLA_Apply_Q_WY_rnfc_blk_var5(
 }
 
 // ============================================================================
-static int NoFLA_QRPmod_WY_unb_var5( int pivoting, int num_stages, 
+static int NoFLA_QRPmod_WY_unb_var4( int pivoting, int num_stages, 
                int m_A, int n_A, double * buff_A, int ldim_A,
                int * buff_p, double * buff_t, 
                int pivot_B, int m_B, double * buff_B, int ldim_B,
