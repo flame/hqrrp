@@ -98,7 +98,7 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
 // It computes the new HQRRP while keeping the same header as LAPACK's dgeqp3.
 // It uses dgeqpf or dgeqp3 for small matrices. The thresholds are defined in
 // constants THRESHOLD_FOR_DGEQPF and THRESHOLD_FOR_DGEQP3.
-// This routtine calls the next one with block size 64 and oversampling 10.
+// This routine calls the next one with block size 64 and oversampling 10.
 //
 
 int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
