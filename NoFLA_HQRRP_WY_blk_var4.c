@@ -122,6 +122,7 @@ static int NoFLA_QRP_pivot_G_B_C( int j_max_col,
                int * buff_p,
                double * buff_d, double * buff_e );
 
+
 // ============================================================================
 void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
         double * work, int * lwork, int * info ) {
@@ -254,7 +255,6 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
 
   // Factorize free columns at the bottom with default values:
   // nb_alg = 64, pp = 10, panel_pivoting = 1.
- 
   if( num_factorized_fixed_cols < mn_A ) {
     * info = NoFLA_HQRRP_WY_blk_var4( 
         m_A - num_factorized_fixed_cols, n_A - num_factorized_fixed_cols, 
@@ -426,7 +426,7 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
     // Check downdating of matrix Y: Compare downdated matrix Y with 
     // matrix Y computed from scratch.
     int     m_cyr, n_cyr, ldim_cyr, m_ABR, ii, jj;
-    double  * buff_cyr, aux, sum = 0.0;
+    double  * buff_cyr, aux, sum;
 
     m_cyr    = m_Y;
     n_cyr    = n_Y - j;
@@ -441,6 +441,8 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
                      & buff_A[ j + j * ldim_A ], & ldim_A,
             & d_zero, & buff_cyr[ 0 + 0 * ldim_cyr ], & ldim_cyr );
 
+    //// print_double_matrix( "cyr", m_cyr, n_cyr, buff_cyr, ldim_cyr );
+    //// print_double_matrix( "y", m_Y, n_Y, buff_Y, ldim_Y );
     sum = 0.0;
     for( jj = 0; jj < n_cyr; jj++ ) {
       for( ii = 0; ii < m_cyr; ii++ ) {
@@ -461,10 +463,10 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
       //// FLA_Merge_2x1( ATR,
       ////                ABR,   & AR );
       //// FLA_Copy( YR, VR );
-      //// FLA_QRPmod_WY_unb_var4( 0, bRow, VR, pB, sB, 1, AR, 1, YR, 0, None );
+      //// FLA_QRPmod_WY_unb_var4( 1, bRow, VR, pB, sB, 1, AR, 1, YR, 0, None );
       dlacpy_( "All", & m_V, & n_VR, buff_YR, & ldim_Y,
                                      buff_VR, & ldim_V );
-      NoFLA_QRPmod_WY_unb_var4( 0, b,
+      NoFLA_QRPmod_WY_unb_var4( 1, b,
           m_V, n_VR, buff_VR, ldim_V,
           buff_pB, buff_sB,
           1, m_A, buff_AR, ldim_A,
@@ -795,6 +797,8 @@ static int NoFLA_QRPmod_WY_unb_var4( int pivoting, int num_stages,
           i_one = 1, n_house_vector, m_rest;
   double  * buff_d, * buff_e, * buff_workspace, diag;
   int     idamax_();
+
+  //// printf( "NoFLA_QRPmod_WY_unb_var4. pivoting: %d \n", pivoting );
 
   // Some initializations.
   mn_A    = min( m_A, n_A );
