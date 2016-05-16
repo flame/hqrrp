@@ -12,7 +12,7 @@ simple_test.x : simple_test.o
 	$(LD) $(LDFLAGS) \
             -o simple_test.x \
             simple_test.o \
-            ../NoFLA_HQRRP_WY_blk_var5.c -lm  \
+            NoFLA_HQRRP_WY_blk_var4.c -lm  \
             /usr/local/lapack/liblapack_340_p4b64_gf.a \
             /usr/local/lapack/mt_openblas/lib/libopenblas_haswellp-r0.2.14.a \
             -lgfortran
