@@ -86,6 +86,42 @@ We will appreciate feedback from the community on the use of this code.
 
 ![alt tag](./speedup.png)
 
+## Citing this work
+
+We ask those who benefit from this work 
+to cite both of the following articles:
+
+```
+@ARTICLE{2015arXiv150307157M,
+  author = {{Martinsson}, P.-G. and {Voronin}, S.},
+   title = "{A randomized blocked algorithm for efficiently computing rank-revealing factorizations of matrices}",
+ journal = {ArXiv e-prints},
+archivePrefix = "arXiv",
+  eprint = {1503.07157},
+primaryClass = "math.NA",
+keywords = {Mathematics - Numerical Analysis},
+    year = 2015,
+   month = mar,
+  adsurl = {http://adsabs.harvard.edu/abs/2015arXiv150307157M},
+ adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+}
+
+@ARTICLE{2015arXiv151202671M,
+  author = {{Martinsson}, P.-G. and {Quintana-Ort\’{\i}}, G. and {Heavner}, N. and
+        {van de Geijn}, R.},
+   title = "{Householder {QR} Factorization: Adding Randomization for Column Pivoting. {FLAME} {W}orking {N}ote \#78}",
+ journal = {ArXiv e-prints},
+archivePrefix = "arXiv",
+  eprint = {1512.02671},
+primaryClass = "math.NA",
+keywords = {Mathematics - Numerical Analysis, Computer Science - Numerical Analysis},
+    year = 2015,
+   month = dec,
+  adsurl = {http://adsabs.harvard.edu/abs/2015arXiv151202671M},
+ adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+}
+```
+
 ## Details
 
 The new code contains the following two main routines:
