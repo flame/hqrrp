@@ -109,7 +109,7 @@ static int NoFLA_QRP_compute_norms(
                int m_A, int n_A, double * buff_A, int ldim_A,
                double * buff_d, double * buff_e );
 
-static int NoFLA_QRP_update_partial_norms( int m_A, int n_A,
+static int NoFLA_QRP_downdate_partial_norms( int m_A, int n_A,
                double * buff_d,  int st_d,
                double * buff_e,  int st_e,
                double * buff_wt, int st_wt,
@@ -136,7 +136,7 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
   int     i_one = 1, i_minus_one = -1, 
           m_A, n_A, mn_A, ldim_A, lquery, nb, num_factorized_fixed_cols, 
           minus_info, iws, lwkopt, j, k, num_fixed_cols, n_rest, itmp;
-  int     * init_jpvt;
+  int     * previous_jpvt;
   int     ilaenv_();
 
   // Some initializations.
@@ -157,7 +157,6 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
   }
 
   if( *info == 0 ) {
-    mn_A = min( m_A, n_A );
     if( mn_A == 0 ) {
       iws    = 1;
       lwkopt = 1;
@@ -243,13 +242,13 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
   }
 
   // Create intermediate jpvt vector.
-  init_jpvt = ( int * ) malloc( n_A * sizeof( int ) );
+  previous_jpvt = ( int * ) malloc( n_A * sizeof( int ) );
 
   // Save a copy of jpvt vector.
   if( num_factorized_fixed_cols > 0 ) {
     // Copy vector.
     for( j = 0; j < n_A; j++ ) {
-      init_jpvt[ j ] = jpvt[ j ];
+      previous_jpvt[ j ] = jpvt[ j ];
     }
   }
 
@@ -260,7 +259,8 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
         m_A - num_factorized_fixed_cols, n_A - num_factorized_fixed_cols, 
         & A[ num_factorized_fixed_cols + num_factorized_fixed_cols * ldim_A ], 
             ldim_A,
-        & jpvt[ num_factorized_fixed_cols ], & tau[ num_factorized_fixed_cols ], 
+        & jpvt[ num_factorized_fixed_cols ], 
+        & tau[ num_factorized_fixed_cols ],
         64, 10, 1 );
   }
 
@@ -270,18 +270,18 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
     for( j = num_factorized_fixed_cols; j < n_A; j++ ) {
       //// printf( "%% Processing j: %d \n", j );
       for( k = j; k < n_A; k++ ) {
-        if( jpvt[ j ] == init_jpvt[ k ] ) {
+        if( jpvt[ j ] == previous_jpvt[ k ] ) {
           //// printf( "%%   Found j: %d  k: %d \n", j, k );
           break;
         }
       }
-      // Swap vector init_jpvt and block above factorized block.
+      // Swap vector previous_jpvt and block above factorized block.
       if( k != j ) { 
-        // Swap elements in init_jpvt.
+        // Swap elements in previous_jpvt.
         //// printf( "%%   Swapping  j: %d  k: %d \n", j, k );
-        itmp = init_jpvt[ j ];
-        init_jpvt[ j ] = init_jpvt[ k ];
-        init_jpvt[ k ] = itmp;
+        itmp = previous_jpvt[ j ];
+        previous_jpvt[ j ] = previous_jpvt[ k ];
+        previous_jpvt[ k ] = itmp;
 
         // Swap columns in block above factorized block.
         dswap_( & num_factorized_fixed_cols,
@@ -292,7 +292,7 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
   }
 
   // Remove intermediate jpvt vector.
-  free( init_jpvt );
+  free( previous_jpvt );
 
   // Return workspace length required.
   work[ 0 ] = iws;
@@ -312,7 +312,7 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
 //   * BLAS-3 based.
 //   * Norm downdating method by Drmac.
 //   * Downdating for computing Y.
-//   * No libFLAME.
+//   * No use of libflame.
 //   * Compact WY transformations are used instead of UT transformations.
 //   * LAPACK's routine dlarfb is used to apply block transformations.
 //
@@ -329,9 +329,9 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
 //                 Usual values for nb_alg are 32, 64, etc.
 // pp:             Oversampling size.
 //                 Usual values for pp are 5, 10, etc.
-// panel_pivoting: If pivoting==1, QR with pivoting is applied to factorize the
-//                 panels of matrix A. Otherwise, QR without pivoting is used.
-//                 Usual values for panel_pivoting is 1.
+// panel_pivoting: If panel_pivoting==1, QR with pivoting is applied to 
+//                 factorize the panels of matrix A. Otherwise, QR without 
+//                 pivoting is used. Usual value for panel_pivoting is 1.
 // Final comments:
 // ---------------
 // This code has been created from a libflame code. Hence, you can find some
@@ -415,6 +415,7 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
     // Check whether it is the last iteration.
     last_iter = ( ( ( j + nb_alg >= m_A )||( j + nb_alg >= n_A ) ) ? 1 : 0 );
 
+    // Some initializations for the iteration of this loop.
     n_VR = n_V - j;
     buff_VR = & buff_V[ 0 + j * ldim_V ];
     buff_YR = & buff_Y[ 0 + j * ldim_Y ];
@@ -422,6 +423,37 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
     buff_sB = & buff_s[ j ];
     buff_AR = & buff_A[ 0 + j * ldim_A ];
 
+    m_AB1     = m_A - j;
+    n_AB1     = b;
+    buff_AB1  = & buff_A[ j + j * ldim_A ];
+    buff_p1   = & buff_p[ j ];
+    buff_s1   = & buff_s[ j ];
+    buff_A01  = & buff_A[ 0 + j * ldim_A ];
+    buff_Y1   = & buff_Y[ 0 + j * ldim_Y ];
+    buff_T1_T = & buff_W[ 0 + j * ldim_W ];
+    ldim_T1_T = ldim_W;
+
+    buff_A11 = & buff_A[ j + j * ldim_A ];
+    m_A11 = b;
+    n_A11 = b;
+
+    buff_A21 = & buff_A[ min( m_A - 1, j + nb_alg ) + j * ldim_A ];
+    m_A21 = max( 0, m_A - j - b );
+    n_A21 = b;
+
+    buff_A12 = & buff_A[ j + min( n_A - 1, j + b ) * ldim_A ];
+    m_A12 = b;
+    n_A12 = max( 0, n_A - j - b );
+
+    //// buff_A22 = & buff_A[ min( m_A - 1, j + b ) + 
+    ////                      min( n_A - 1, j + b ) * ldim_A ];
+    m_A22 = max( 0, m_A - j - b );
+    //// n_A22 = max( 0, n_A - j - b );
+
+    buff_Y2 = & buff_Y[ 0 + min( n_Y - 1, j + b ) * ldim_Y ];
+    buff_G1 = & buff_G[ 0 + j * ldim_G ];
+    buff_G2 = & buff_G[ 0 + min( n_G - 1, j + b ) * ldim_G ];
+      
 #ifdef CHECK_DOWNDATING_OF_Y
     // Check downdating of matrix Y: Compare downdated matrix Y with 
     // matrix Y computed from scratch.
@@ -464,11 +496,11 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
       ////                ABR,   & AR );
       //// FLA_Copy( YR, VR );
       //// FLA_QRPmod_WY_unb_var4( 1, bRow, VR, pB, sB, 1, AR, 1, YR, 0, None );
+
       dlacpy_( "All", & m_V, & n_VR, buff_YR, & ldim_Y,
                                      buff_VR, & ldim_V );
       NoFLA_QRPmod_WY_unb_var4( 1, b,
-          m_V, n_VR, buff_VR, ldim_V,
-          buff_pB, buff_sB,
+          m_V, n_VR, buff_VR, ldim_V, buff_pB, buff_sB,
           1, m_A, buff_AR, ldim_A,
           1, m_Y, buff_YR, ldim_Y,
           0, buff_Y, ldim_Y );
@@ -478,45 +510,18 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
     // Compute QRP of panel AB1 = [ A11; A21 ].
     // Apply same permutations to A01 and Y1, and build T1_T.
     //
-
     //// FLA_Part_2x1( W1,   & T1_T,
     ////                     & None,    b, FLA_TOP );
     //// FLA_Merge_2x1( A11,
     ////                A21,   & AB1 );
     //// FLA_QRPmod_WY_unb_var4( panel_pivoting, -1, AB1, p1, s1, 
     ////                         1, A01, 1, Y1, 1, T1_T );
-    m_AB1     = m_A - j;
-    n_AB1     = b;
-    buff_AB1  = & buff_A[ j + j * ldim_A ];
-    buff_p1   = & buff_p[ j ];
-    buff_s1   = & buff_s[ j ];
-    buff_A01  = & buff_A[ 0 + j * ldim_A ];
-    buff_Y1   = & buff_Y[ 0 + j * ldim_Y ];
-    buff_T1_T = & buff_W[ 0 + j * ldim_W ];
-    ldim_T1_T = ldim_W;
+
     NoFLA_QRPmod_WY_unb_var4( panel_pivoting, -1,
-        m_AB1, n_AB1, buff_AB1, ldim_A,
-        buff_p1, buff_s1,
+        m_AB1, n_AB1, buff_AB1, ldim_A, buff_p1, buff_s1,
         1, j, buff_A01, ldim_A,
         1, m_Y, buff_Y1, ldim_Y,
         1, buff_T1_T, ldim_W );
-
-    buff_A11 = & buff_A[ j + j * ldim_A ];
-    m_A11 = b;
-    n_A11 = b;
-
-    buff_A21 = & buff_A[ min( m_A - 1, j + nb_alg ) + j * ldim_A ];
-    m_A21 = max( 0, m_A - j - b );
-    n_A21 = b;
-
-    buff_A12 = & buff_A[ j + min( n_A - 1, j + b ) * ldim_A ];
-    m_A12 = b;
-    n_A12 = max( 0, n_A - j - b );
-
-    //// buff_A22 = & buff_A[ min( m_A - 1, j + b ) + 
-    ////                      min( n_A - 1, j + b ) * ldim_A ];
-    m_A22 = max( 0, m_A - j - b );
-    //// n_A22 = max( 0, n_A - j - b );
 
     //
     // Update the rest of the matrix.
@@ -535,15 +540,11 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
           m_A12 + m_A22, n_A12, buff_A12, ldim_A );
     }
 
-    buff_Y2 = & buff_Y[ 0 + min( n_Y - 1, j + b ) * ldim_Y ];
-    buff_G1 = & buff_G[ 0 + j * ldim_G ];
-    buff_G2 = & buff_G[ 0 + min( n_G - 1, j + b ) * ldim_G ];
-      
     //
     // Downdate matrix Y.
     //
     if ( ! last_iter ) {
-      //// downdating_Y( A11, A21, A12, T1_T, Y2, G1, G2 );
+      //// MyFLA_Downdate_Y( A11, A21, A12, T1_T, Y2, G1, G2 );
 
       NoFLA_Downdate_Y(
           m_A11, n_A11, buff_A11, ldim_A,
@@ -803,15 +804,15 @@ static int NoFLA_QRPmod_WY_unb_var4( int pivoting, int num_stages,
   // Some initializations.
   mn_A    = min( m_A, n_A );
 
-  // Create auxiliary vectors.
-  buff_d         = ( double * ) malloc( n_A * sizeof( double ) );
-  buff_e         = ( double * ) malloc( n_A * sizeof( double ) );
-  buff_workspace = ( double * ) malloc( n_A * sizeof( double ) );
-
   // Set the number of stages, if needed.
   if( num_stages < 0 ) {
     num_stages = mn_A;
   }
+
+  // Create auxiliary vectors.
+  buff_d         = ( double * ) malloc( n_A * sizeof( double ) );
+  buff_e         = ( double * ) malloc( n_A * sizeof( double ) );
+  buff_workspace = ( double * ) malloc( n_A * sizeof( double ) );
 
   if( pivoting == 1 ) {
     // Compute initial norms of A into d and e.
@@ -865,11 +866,11 @@ static int NoFLA_QRPmod_WY_unb_var4( int pivoting, int num_stages,
 
     if( pivoting == 1 ) {
       // Update partial column norms.
-      NoFLA_QRP_update_partial_norms( m_A22, n_A22, 
+      NoFLA_QRP_downdate_partial_norms( m_A22, n_A22, 
           & buff_d[ j+1 ], 1,
           & buff_e[ j+1 ], 1,
           & buff_A[ j + ( j+1 ) * ldim_A ], ldim_A,
-          & buff_A[ ( j+1 ) + ( j+1 ) * ldim_A ], ldim_A );
+          & buff_A[ ( j+1 ) + min( n_A-1, ( j+1 ) ) * ldim_A ], ldim_A );
     }
   }
 
@@ -911,7 +912,7 @@ static int NoFLA_QRP_compute_norms(
 }
 
 // ============================================================================
-static int NoFLA_QRP_update_partial_norms( int m_A, int n_A,
+static int NoFLA_QRP_downdate_partial_norms( int m_A, int n_A,
                double * buff_d,  int st_d,
                double * buff_e,  int st_e,
                double * buff_wt, int st_wt,
