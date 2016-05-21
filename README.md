@@ -92,18 +92,12 @@ We ask those who benefit from this work
 to cite both of the following articles:
 
 ```
-@ARTICLE{2015arXiv150307157M,
-  author = {{Martinsson}, P.-G. and {Voronin}, S.},
-   title = "{A randomized blocked algorithm for efficiently computing rank-revealing factorizations of matrices}",
- journal = {ArXiv e-prints},
-archivePrefix = "arXiv",
-  eprint = {1503.07157},
-primaryClass = "math.NA",
-keywords = {Mathematics - Numerical Analysis},
-    year = 2015,
-   month = mar,
-  adsurl = {http://adsabs.harvard.edu/abs/2015arXiv150307157M},
- adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+@ARTICLE{martinsson2015blocked,
+  title={Blocked rank-revealing QR factorizations: How randomized sampling can be used to avoid single-vector pivoting},
+  author={Martinsson, Per-Gunnar},
+  journal={arXiv preprint arXiv:1505.08115},
+  year={2015},
+  month={may},
 }
 
 @ARTICLE{2015arXiv151202671M,
