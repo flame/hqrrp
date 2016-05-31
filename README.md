@@ -122,10 +122,12 @@ We offer two variants of the code:
 
 * LAPACK-compatible pure C code: 
   It uses compact WY transformations.
+  The sources are stored in the lapack_compatible_sources folder.
 
 * LAPACK-like libflame code: 
   It uses compact UT transformations.
   This code resembles the algorithm in the paper.
+  The sources are stored in the libflame_sources folder.
 
 ### Details of LAPACK-compatible pure C code: 
 
