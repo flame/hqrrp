@@ -118,6 +118,17 @@ keywords = {Mathematics - Numerical Analysis, Computer Science - Numerical Analy
 
 ## Details
 
+We offer two variants of the code:
+
+* LAPACK-compatible pure C code: 
+  It uses compact WY transformations.
+
+* LAPACK-like libflame code: 
+  It uses compact UT transformations.
+  This code resembles the algorithm in the paper.
+
+### Details of LAPACK-compatible pure C code: 
+
 The new code contains the following two main routines:
 
 ```
@@ -144,4 +155,20 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
 These two routines are stored in the file `NoFLA_HQRRP_WY_blk_var4.c`.
 The file `simple_test.c` contain a main program to test routine `dgeqp4`.
 
+### Details of LAPACK-like libflame code: 
+
+The new code contains the following main routine:
+
+```
+int FLA_HQRRP_UT_blk_var2( FLA_Obj A, FLA_Obj p, FLA_Obj s, 
+        int nb_alg, int pp, int panel_pivoting );
+// 
+// This routine is not plug compatible with LAPACK's routine dgeqp3.
+// It computes the new HQRRP and allows the user to fine tune more arguments,
+// such as the block size, oversampling, etc.
+//
+```
+
+These routine is stored in the file `NoFLA_HQRRP_UT_blk_var2.c`.
+The file `simple_test.c` contain a main program to test it.
 
