@@ -171,6 +171,6 @@ int FLA_HQRRP_UT_blk_var2( FLA_Obj A, FLA_Obj p, FLA_Obj s,
 //
 ```
 
-These routine is stored in the file `NoFLA_HQRRP_UT_blk_var2.c`.
+This routine is stored in the file `NoFLA_HQRRP_UT_blk_var2.c`.
 The file `simple_test.c` contain a main program to test it.
 
