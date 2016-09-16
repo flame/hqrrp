@@ -133,28 +133,18 @@ int FLA_HQRRP_UT_blk_var2( FLA_Obj A, FLA_Obj p, FLA_Obj s,
 //   * Norm downdating method by Drmac.
 //   * Downdating for computing Y.
 //   * Use of libflame.
+//   * UT transformations are used.
 //
 // Arguments:
 // ----------
-// m_A:            Number of rows of matrix A.
-// n_A:            Number of columns of matrix A.
-// buff_A:         Address/pointer of/to data in matrix A. Matrix A must be 
-//                 stored in column-order.
-// ldim_A:         Leading dimension of matrix A.
-// buff_jpvt:      Input/output vector with the pivots.
-// buff_tau:       Output vector with the tau values of the Householder factors.
-// nb_alg:         Block size. 
-//                 Usual values for nb_alg are 32, 64, etc.
-// pp:             Oversampling size.
-//                 Usual values for pp are 5, 10, etc.
+// A:              Matrix to be factorized.
+// p:              output vector with the pivots.
+// s:              Output vector with the tau values of the Householder factors.
+// nb_alg:         Block size. Usual values for nb_alg are 32, 64, etc.
+// pp:             Oversampling size. Usual values for pp are 5, 10, etc.
 // panel_pivoting: If panel_pivoting==1, QR with pivoting is applied to 
 //                 factorize the panels of matrix A. Otherwise, QR without 
 //                 pivoting is used. Usual value for panel_pivoting is 1.
-// Final comments:
-// ---------------
-// This code has been created from a libflame code. Hence, you can find some
-// commented calls to libflame routines. We have left them to make it easier
-// to interpret the meaning of the C code.
 //
   // Declaration of variables.
   FLA_Obj ATL, ATR,    A00, A01, A02, 
@@ -447,15 +437,15 @@ static int MyFLA_Normal_random_matrix( FLA_Obj A ) {
   return FLA_SUCCESS;
 }
 
-// ============================================================================
+/* ========================================================================= */
 static double MyFLA_Normal_random_number( double mu, double sigma ) {
-  static int     num_calls = 0;
+  static int     alternate_calls = 0;
   static double  b1, b2;
   double         c1, c2, a, factor;
 
   // Quick return.
-  if( num_calls == 1 ) {
-    num_calls = ! num_calls;
+  if( alternate_calls == 1 ) {
+    alternate_calls = ! alternate_calls;
     return( mu + sigma * b2 );
   }
   // Main loop.
@@ -467,7 +457,7 @@ static double MyFLA_Normal_random_number( double mu, double sigma ) {
   factor = sqrt( ( -2 * log( a ) ) / a );
   b1 = c1 * factor;
   b2 = c2 * factor;
-  num_calls = ! num_calls;
+  alternate_calls = ! alternate_calls;
   return( mu + sigma * b1 );
 }
 
