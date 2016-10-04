@@ -8,7 +8,7 @@ LDFLAGS = -O -fopenmp
 
 # Defintions of rules.
 
-simple_test.x : simple_test.o
+simple_test.x : simple_test.o NoFLA_HQRRP_WY_blk_var4.o
 	$(LD) $(LDFLAGS) \
             -o simple_test.x \
             simple_test.o \
@@ -19,6 +19,9 @@ simple_test.x : simple_test.o
 
 simple_test.o : simple_test.c
 	$(CC) $(CCFLAGS) -O -fopenmp -c simple_test.c
+
+%.o : %.c
+	$(CC) $(CCFLAGS) -c $< -o $@
 
 clean: 
 	rm -f a.out *.x *.o *~ core
