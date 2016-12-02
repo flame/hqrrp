@@ -92,6 +92,15 @@ We ask those who benefit from this work
 to cite both of the following articles:
 
 ```
+@ARTICLE{2016MQHGsisc,
+  author  = {{Martinsson}, P.-G. and {Quintana-Ort\’{\i}}, G. 
+            and {Heavner}, N. and {van de Geijn}, R.},
+  title   = "{Householder {QR} Factorization: Adding Randomization 
+            for Column Pivoting}",
+  journal = {SIAM Journal on Scientific Computing (accepted / in press)},
+  year    = 2016
+}
+
 @ARTICLE{martinsson2015blocked,
   title={Blocked rank-revealing QR factorizations: How randomized sampling can be used to avoid single-vector pivoting},
   author={Martinsson, Per-Gunnar},
