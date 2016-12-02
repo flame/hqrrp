@@ -92,8 +92,18 @@ We ask those who benefit from this work
 to cite both of the following articles:
 
 ```
+@ARTICLE{2016MQHGsisc,
+  author  = {{Martinsson}, P.-G. and {Quintana-Ort\’{\i}}, G. 
+            and {Heavner}, N. and {van de Geijn}, R.},
+  title   = "{Householder {QR} Factorization: Adding Randomization 
+            for Column Pivoting}",
+  journal = {SIAM Journal on Scientific Computing (accepted / in press)},
+  year    = 2016
+}
+
 @ARTICLE{martinsson2015blocked,
-  title={Blocked rank-revealing QR factorizations: How randomized sampling can be used to avoid single-vector pivoting},
+  title={Blocked rank-revealing QR factorizations: How randomized 
+        sampling can be used to avoid single-vector pivoting},
   author={Martinsson, Per-Gunnar},
   journal={arXiv preprint arXiv:1505.08115},
   year={2015},
@@ -101,14 +111,16 @@ to cite both of the following articles:
 }
 
 @ARTICLE{2015arXiv151202671M,
-  author = {{Martinsson}, P.-G. and {Quintana-Ort\’{\i}}, G. and {Heavner}, N. and
-        {van de Geijn}, R.},
-   title = "{Householder {QR} Factorization: Adding Randomization for Column Pivoting. {FLAME} {W}orking {N}ote \#78}",
+  author = {{Martinsson}, P.-G. and {Quintana-Ort\’{\i}}, G. 
+           and {Heavner}, N. and {van de Geijn}, R.},
+   title = "{Householder {QR} Factorization: Adding Randomization for 
+           Column Pivoting. {FLAME} {W}orking {N}ote \#78}",
  journal = {ArXiv e-prints},
 archivePrefix = "arXiv",
   eprint = {1512.02671},
 primaryClass = "math.NA",
-keywords = {Mathematics - Numerical Analysis, Computer Science - Numerical Analysis},
+keywords = {Mathematics - Numerical Analysis, Computer Science - 
+           Numerical Analysis},
     year = 2015,
    month = dec,
   adsurl = {http://adsabs.harvard.edu/abs/2015arXiv151202671M},
