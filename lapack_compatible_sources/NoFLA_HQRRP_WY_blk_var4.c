@@ -589,11 +589,8 @@ static int NoFLA_Normal_random_matrix( int m_A, int n_A,
   return 0;
 }
 
-// ============================================================================
+/* ========================================================================= */
 static double NoFLA_Normal_random_number( double mu, double sigma ) {
-//
-// It computes and returns a normal random number.
-//
   static int     alternate_calls = 0;
   static double  b1, b2;
   double         c1, c2, a, factor;
@@ -630,7 +627,7 @@ static int NoFLA_Downdate_Y(
 // Only Y2 of Y is updated.
 // Only G1 and G2 of G are updated.
 //
-// Y2 = Y2 - ( G1 - ( G1*U11 + G2*U21 ) * inv( T11 ) * U11' ) * R12.
+// Y2 = Y2 - ( G1 - ( G1*U11 + G2*U21 ) * T11 * U11' ) * R12.
 //
   int    i, j;
   double * buff_B;
@@ -663,7 +660,7 @@ static int NoFLA_Downdate_Y(
           & d_one, buff_G2, & ldim_G2, buff_U21, & ldim_U21,
           & d_one, buff_B, & ldim_B );
 
-  // B = B * inv( T11 ).
+  // B = B * T11.
   //// FLA_Trsm( FLA_RIGHT, FLA_UPPER_TRIANGULAR,
   ////           FLA_NO_TRANSPOSE, FLA_NONUNIT_DIAG,
   ////           FLA_ONE, T, B );
