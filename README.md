@@ -71,10 +71,11 @@ compatible with DGEQP3.
 The new code can be downloaded from https://github.com/flame/hqrrp/.
 
 The algorithm was originally implemented using the FLAME/C API with 
-a variation of the compact WY transform we call the UT transform. The
-implementation in this directory instead uses the original compact 
+a variation of the compact WY transform we call the UT transform. 
+In addition, 
+we also provide an implementation that instead uses the original compact 
 WY transform so that many routines from LAPACK can be employed in a 
-seemless fashion.  
+seamless fashion.  
 
 This implementation as well as the original implementation based on the UT
 transform will eventually be included in the libflame library: 
@@ -89,7 +90,7 @@ We will appreciate feedback from the community on the use of this code.
 ## Citing this work
 
 We ask those who benefit from this work 
-to cite both of the following articles:
+to cite the following articles:
 
 ```
 @ARTICLE{2016MQHGsisc,
@@ -167,7 +168,8 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
 ```
 
 These two routines are stored in the file `NoFLA_HQRRP_WY_blk_var4.c`.
-The file `simple_test.c` contain a main program to test routine `dgeqp4`.
+The file `simple_test.c` in this folder 
+contains a main program to test routine `dgeqp4`.
 
 ### Details of LAPACK-like libflame code: 
 
@@ -184,5 +186,5 @@ int FLA_HQRRP_UT_blk_var2( FLA_Obj A, FLA_Obj p, FLA_Obj s,
 ```
 
 This routine is stored in the file `FLA_HQRRP_UT_blk_var2.c`.
-The file `simple_test.c` contain a main program to test it.
+The file `simple_test.c` in this folder contains a main program to test it.
 
