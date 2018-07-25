@@ -93,13 +93,19 @@ We ask those who benefit from this work
 to cite the following articles:
 
 ```
-@ARTICLE{2016MQHGsisc,
-  author  = {{Martinsson}, P.-G. and {Quintana-Ort\’{\i}}, G. 
-            and {Heavner}, N. and {van de Geijn}, R.},
-  title   = "{Householder {QR} Factorization: Adding Randomization 
-            for Column Pivoting}",
-  journal = {SIAM Journal on Scientific Computing (accepted / in press)},
-  year    = 2016
+@article{doi:10.1137/16M1081270,
+author  = {Martinsson, P. and Quintana Ort\'{\i}, G.
+           and Heavner, N. and van de Geijn, R.},
+title   = {Householder QR Factorization  
+           With Randomization for Column Pivoting (HQRRP)},
+journal = {SIAM Journal on Scientific Computing},
+volume  = {39},
+number  = {2},
+pages   = {C96-C115},
+year    = {2017},
+doi     = {10.1137/16M1081270},
+URL     = {https://doi.org/10.1137/16M1081270},
+eprint  = {https://doi.org/10.1137/16M1081270}
 }
 
 @ARTICLE{martinsson2015blocked,
