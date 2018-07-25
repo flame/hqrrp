@@ -90,7 +90,7 @@ We will appreciate feedback from the community on the use of this code.
 ## Citing this work
 
 We ask those who benefit from this work 
-to cite the following articles:
+to cite the following article:
 
 ```
 @article{doi:10.1137/16M1081270,
