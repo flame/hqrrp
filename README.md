@@ -90,7 +90,7 @@ We will appreciate feedback from the community on the use of this code.
 ## Citing this work
 
 We ask those who benefit from this work 
-to cite the following article:
+to cite the following articles:
 
 ```
 @article{doi:10.1137/16M1081270,
@@ -107,9 +107,7 @@ doi     = {10.1137/16M1081270},
 URL     = {https://doi.org/10.1137/16M1081270},
 eprint  = {https://doi.org/10.1137/16M1081270}
 }
-```
 
-<!---
 @ARTICLE{martinsson2015blocked,
 title   = {Blocked rank-revealing QR factorizations: How randomized 
            sampling can be used to avoid single-vector pivoting},
@@ -135,7 +133,7 @@ month         = dec,
 adsurl        = {http://adsabs.harvard.edu/abs/2015arXiv151202671M},
 adsnote       = {Provided by the SAO/NASA Astrophysics Data System}
 }
--->
+```
 
 ## Details
 
