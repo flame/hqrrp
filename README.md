@@ -107,6 +107,7 @@ doi     = {10.1137/16M1081270},
 URL     = {https://doi.org/10.1137/16M1081270},
 eprint  = {https://doi.org/10.1137/16M1081270}
 }
+```
 
 <!---
 @ARTICLE{martinsson2015blocked,
@@ -135,7 +136,6 @@ adsurl        = {http://adsabs.harvard.edu/abs/2015arXiv151202671M},
 adsnote       = {Provided by the SAO/NASA Astrophysics Data System}
 }
 -->
-```
 
 ## Details
 
