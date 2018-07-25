@@ -108,31 +108,33 @@ URL     = {https://doi.org/10.1137/16M1081270},
 eprint  = {https://doi.org/10.1137/16M1081270}
 }
 
+<!---
 @ARTICLE{martinsson2015blocked,
-  title={Blocked rank-revealing QR factorizations: How randomized 
-        sampling can be used to avoid single-vector pivoting},
-  author={Martinsson, Per-Gunnar},
-  journal={arXiv preprint arXiv:1505.08115},
-  year={2015},
-  month={may},
+title   = {Blocked rank-revealing QR factorizations: How randomized 
+           sampling can be used to avoid single-vector pivoting},
+author  = {Martinsson, Per-Gunnar},
+journal = {arXiv preprint arXiv:1505.08115},
+year    = {2015},
+month   = {may}
 }
 
 @ARTICLE{2015arXiv151202671M,
-  author = {{Martinsson}, P.-G. and {Quintana-Ort\’{\i}}, G. 
-           and {Heavner}, N. and {van de Geijn}, R.},
-   title = "{Householder {QR} Factorization: Adding Randomization for 
-           Column Pivoting. {FLAME} {W}orking {N}ote \#78}",
- journal = {ArXiv e-prints},
+author        = {{Martinsson}, P.-G. and {Quintana-Ort\’{\i}}, G. 
+                 and {Heavner}, N. and {van de Geijn}, R.},
+title         = "{Householder {QR} Factorization: Adding Randomization for 
+                 Column Pivoting. {FLAME} {W}orking {N}ote \#78}",
+journal       = {ArXiv e-prints},
 archivePrefix = "arXiv",
-  eprint = {1512.02671},
-primaryClass = "math.NA",
-keywords = {Mathematics - Numerical Analysis, Computer Science - 
-           Numerical Analysis},
-    year = 2015,
-   month = dec,
-  adsurl = {http://adsabs.harvard.edu/abs/2015arXiv151202671M},
- adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+eprint        = {1512.02671},
+primaryClass  = "math.NA",
+keywords      = {Mathematics - Numerical Analysis, Computer Science - 
+                 Numerical Analysis},
+year          = 2015,
+month         = dec,
+adsurl        = {http://adsabs.harvard.edu/abs/2015arXiv151202671M},
+adsnote       = {Provided by the SAO/NASA Astrophysics Data System}
 }
+-->
 ```
 
 ## Details
