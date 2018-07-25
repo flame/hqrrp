@@ -135,12 +135,12 @@ We offer two variants of the code:
 
 * LAPACK-compatible pure C code: 
   It uses compact WY transformations.
-  The sources are stored in the lapack_compatible_sources folder.
+  The sources are stored in the `lapack_compatible_sources` directory.
 
 * LAPACK-like libflame code: 
   It uses compact UT transformations.
   This code resembles the algorithm in the paper.
-  The sources are stored in the libflame_sources folder.
+  The sources are stored in the `libflame_sources` directory.
 
 ### Details of LAPACK-compatible pure C code: 
 
@@ -167,8 +167,8 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
 //
 ```
 
-These two routines are stored in the file `NoFLA_HQRRP_WY_blk_var4.c`.
-The file `simple_test.c` in this folder 
+These two routines are stored in the `NoFLA_HQRRP_WY_blk_var4.c` file.
+The `simple_test.c` file in this directory
 contains a main program to test routine `dgeqp4`.
 
 ### Details of LAPACK-like libflame code: 
@@ -185,6 +185,6 @@ int FLA_HQRRP_UT_blk_var2( FLA_Obj A, FLA_Obj p, FLA_Obj s,
 //
 ```
 
-This routine is stored in the file `FLA_HQRRP_UT_blk_var2.c`.
-The file `simple_test.c` in this folder contains a main program to test it.
+This routine is stored in the `FLA_HQRRP_UT_blk_var2.c` file.
+The `simple_test.c` file in this directory contains a main program to test it.
 
