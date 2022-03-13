@@ -8,7 +8,7 @@ Per-Gunnar Martinsson
   University of Colorado at Boulder, 
   526 UCB, Boulder, CO 80309-0526, USA
 
-Gregorio Quintana-Orti
+Gregorio Quint64_tana-Orti
   Depto. de Ingenieria y Ciencia de Computadores, 
   Universitat Jaume I, 
   12.071 Castellon, Spain
@@ -49,6 +49,7 @@ WITHOUT ANY WARRANTY EXPRESSED OR IMPLIED.
 #include <blas.hh>
 #include <lapack.hh>
 #include <lapack/fortran.h>
+#include <lapack/config.h>
 
 
 // Matrices with dimensions smaller than THRESHOLD_FOR_DGEQPF are processed 
@@ -57,7 +58,7 @@ WITHOUT ANY WARRANTY EXPRESSED OR IMPLIED.
 // THRESHOLD_FOR_DGEQP3 are processed with LAPACK's routine dgeqp3.
 // Matrices with dimensions larger than THRESHOLD_FOR_DGEQP3 are processed 
 // with the new HQRRP code.
-#define THRESHOLD_FOR_DGEQPF   250
+#define THRESHOLD_FOR_DGEQPF   -1
 #define THRESHOLD_FOR_DGEQP3  1000
 
 
@@ -77,71 +78,72 @@ WITHOUT ANY WARRANTY EXPRESSED OR IMPLIED.
 // ============================================================================
 // Declaration of local prototypes.
 
-static int NoFLA_Normal_random_matrix( int m_A, int n_A, 
-               double * buff_A, int ldim_A );
+static int64_t NoFLA_Normal_random_matrix( int64_t m_A, int64_t n_A, 
+               double * buff_A, int64_t ldim_A );
 
 static double NoFLA_Normal_random_number( double mu, double sigma );
 
-static int NoFLA_Downdate_Y( 
-               int m_U11, int n_U11, double * buff_U11, int ldim_U11,
-               int m_U21, int n_U21, double * buff_U21, int ldim_U21,
-               int m_A12, int n_A12, double * buff_A12, int ldim_A12,
-               int m_T, int n_T, double * buff_T, int ldim_T,
-               int m_Y2, int n_Y2, double * buff_Y2, int ldim_Y2,
-               int m_G1, int n_G1, double * buff_G1, int ldim_G1,
-               int m_G2, int n_G2, double * buff_G2, int ldim_G2 );
+static int64_t NoFLA_Downdate_Y( 
+               int64_t m_U11, int64_t n_U11, double * buff_U11, int64_t ldim_U11,
+               int64_t m_U21, int64_t n_U21, double * buff_U21, int64_t ldim_U21,
+               int64_t m_A12, int64_t n_A12, double * buff_A12, int64_t ldim_A12,
+               int64_t m_T, int64_t n_T, double * buff_T, int64_t ldim_T,
+               int64_t m_Y2, int64_t n_Y2, double * buff_Y2, int64_t ldim_Y2,
+               int64_t m_G1, int64_t n_G1, double * buff_G1, int64_t ldim_G1,
+               int64_t m_G2, int64_t n_G2, double * buff_G2, int64_t ldim_G2 );
 
-static int NoFLA_Apply_Q_WY_lhfc_blk_var4( 
-               int m_U, int n_U, double * buff_U, int ldim_U,
-               int m_T, int n_T, double * buff_T, int ldim_T,
-               int m_B, int n_B, double * buff_B, int ldim_B );
+static int64_t NoFLA_Apply_Q_WY_lhfc_blk_var4( 
+               int64_t m_U, int64_t n_U, double * buff_U, int64_t ldim_U,
+               int64_t m_T, int64_t n_T, double * buff_T, int64_t ldim_T,
+               int64_t m_B, int64_t n_B, double * buff_B, int64_t ldim_B );
 
-static int NoFLA_Apply_Q_WY_rnfc_blk_var4( 
-               int m_U, int n_U, double * buff_U, int ldim_U,
-               int m_T, int n_T, double * buff_T, int ldim_T,
-               int m_B, int n_B, double * buff_B, int ldim_B );
+static int64_t NoFLA_Apply_Q_WY_rnfc_blk_var4( 
+               int64_t m_U, int64_t n_U, double * buff_U, int64_t ldim_U,
+               int64_t m_T, int64_t n_T, double * buff_T, int64_t ldim_T,
+               int64_t m_B, int64_t n_B, double * buff_B, int64_t ldim_B );
 
-static int NoFLA_QRPmod_WY_unb_var4( int pivoting, int num_stages, 
-               int m_A, int n_A, double * buff_A, int ldim_A,
-               int * buff_p, double * buff_t, 
-               int pivot_B, int m_B, double * buff_B, int ldim_B,
-               int pivot_C, int m_C, double * buff_C, int ldim_C,
-               int build_T, double * buff_T, int ldim_T );
+static int64_t NoFLA_QRPmod_WY_unb_var4( int64_t pivoting, int64_t num_stages, 
+               int64_t m_A, int64_t n_A, double * buff_A, int64_t ldim_A,
+               int64_t * buff_p, double * buff_t, 
+               int64_t pivot_B, int64_t m_B, double * buff_B, int64_t ldim_B,
+               int64_t pivot_C, int64_t m_C, double * buff_C, int64_t ldim_C,
+               int64_t build_T, double * buff_T, int64_t ldim_T );
 
-static int NoFLA_QRP_compute_norms(
-               int m_A, int n_A, double * buff_A, int ldim_A,
+static int64_t NoFLA_QRP_compute_norms(
+               int64_t m_A, int64_t n_A, double * buff_A, int64_t ldim_A,
                double * buff_d, double * buff_e );
 
-static int NoFLA_QRP_downdate_partial_norms( int m_A, int n_A,
-               double * buff_d,  int st_d,
-               double * buff_e,  int st_e,
-               double * buff_wt, int st_wt,
-               double * buff_A,  int ldim_A );
+static int64_t NoFLA_QRP_downdate_partial_norms( int64_t m_A, int64_t n_A,
+               double * buff_d,  int64_t st_d,
+               double * buff_e,  int64_t st_e,
+               double * buff_wt, int64_t st_wt,
+               double * buff_A,  int64_t ldim_A );
 
-static int NoFLA_QRP_pivot_G_B_C( int j_max_col,
-               int m_G, double * buff_G, int ldim_G, 
-               int pivot_B, int m_B, double * buff_B, int ldim_B, 
-               int pivot_C, int m_C, double * buff_C, int ldim_C, 
-               int * buff_p,
+static int64_t NoFLA_QRP_pivot_G_B_C( int64_t j_max_col,
+               int64_t m_G, double * buff_G, int64_t ldim_G, 
+               int64_t pivot_B, int64_t m_B, double * buff_B, int64_t ldim_B, 
+               int64_t pivot_C, int64_t m_C, double * buff_C, int64_t ldim_C, 
+               int64_t * buff_p,
                double * buff_d, double * buff_e );
 
 
 // ============================================================================
-void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
-        double * work, int * lwork, int * info ) {
+void dgeqp4( int64_t * m, int64_t * n, double * A, int64_t * lda, int64_t * jpvt, double * tau,
+        double * work, int64_t * lwork, int64_t * info ) {
 // 
 // This routine is plug compatible with LAPACK's routine dgeqp3.
 // It computes the new HQRRP while keeping the same header as LAPACK's dgeqp3.
 // It uses dgeqpf or dgeqp3 for small matrices. The thresholds are defined in
 // constants THRESHOLD_FOR_DGEQPF and THRESHOLD_FOR_DGEQP3.
 //
-  int     INB = 1;
-  int     i_one = 1, i_minus_one = -1, 
+  int64_t     INB = 1;
+  int64_t     i_one = 1, i_minus_one = -1, 
           m_A, n_A, mn_A, ldim_A, lquery, nb, num_factorized_fixed_cols, 
           minus_info, iws, lwkopt, j, k, num_fixed_cols, n_rest, itmp;
-  int     * previous_jpvt;
+  int64_t     * previous_jpvt;
 
-  typedef lapack::lapack_int lapack_int;
+  //typedef lapack::lapack::lapack_int lapack::lapack_int;
+  //using lapack::lapack::lapack_int;
   using blas::real;
 
   // Some initializations.
@@ -180,20 +182,20 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
       */
       iws    = 3 * n_A + 1;
       double qry_work[1];
-      lapack_int ineg_one = -1;
-      lapack_int m_A_ = (lapack_int) m_A;
-      lapack_int n_A_ = (lapack_int) n_A;
-      lapack_int lda_ = (lapack_int) lda;
+      lapack::lapack_int ineg_one = -1;
+      lapack::lapack_int m_A_ = (lapack::lapack_int) m_A;
+      lapack::lapack_int n_A_ = (lapack::lapack_int) n_A;
+      lapack::lapack_int lda_ = (lapack::lapack_int) lda;
       LAPACK_dgeqrf(
-          &m_A_, &n_A_,
-          A, &lda_,
+          & m_A_, & n_A_,
+          A, & lda_,
           tau,
-          qry_work, &ineg_one, &info_ );
-      if (info_ < 0) {
-          throw Error();
+          qry_work, & ineg_one, & info );
+      if (info < 0) {
+          throw blas::Error();
       }
-      lapack_int lwork_ = real(qry_work[0]);
-      int nb_lapack = ((int) lwork_) / n_A;
+      lapack::lapack_int lwork_ = real(qry_work[0]);
+      int64_t nb_lapack = ((int64_t) lwork_) / n_A;
       lwkopt = 2 * n_A + (n_A + 1) * nb_lapack;
       /*
       LAPACK++ gets the workspace by calling DGEQRF, rather than by 
@@ -228,7 +230,7 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
   }
 
   if( * info != 0 ) {
-    throw Error();
+    throw blas::Error();
   } else if( lquery ) {
     return;
   }
@@ -242,7 +244,7 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
   if( mn_A < THRESHOLD_FOR_DGEQPF ) {
     // Call to LAPACK routine.
     //// printf( "Calling dgeqpf\n" );
-    LAPACK_dgeqpf( m, n, A, lda, jpvt, tau, work, info );
+    //LAPACK_dgeqpf( m, n, A, lda, jpvt, tau, work, info ); // riley comment out
     return;
   } else if( mn_A < THRESHOLD_FOR_DGEQP3 ) {
     //// printf( "Calling dgeqp3\n" );
@@ -277,7 +279,7 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
     if( * info != 0 ) {
       fprintf( stderr, "ERROR in dgeqrf: Info: %d \n", * info );
     }
-    iws = max( iws, ( int ) work[ 0 ] );
+    iws = max( iws, ( int64_t ) work[ 0 ] );
     if( num_factorized_fixed_cols < n_A ) {
       n_rest = n_A - num_factorized_fixed_cols;
 
@@ -296,12 +298,12 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
         fprintf( stderr, "ERROR in dormqr: Info: %d \n", * info );
       }
 
-      iws = max( iws, ( int ) work[ 0 ] );
+      iws = max( iws, ( int64_t ) work[ 0 ] );
     }
   }
 
-  // Create intermediate jpvt vector.
-  previous_jpvt = ( int * ) malloc( n_A * sizeof( int ) );
+  // Create int64_termediate jpvt vector.
+  previous_jpvt = ( int64_t * ) malloc( n_A * sizeof( int64_t ) );
 
   // Save a copy of jpvt vector.
   if( num_factorized_fixed_cols > 0 ) {
@@ -344,13 +346,13 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
 
         // Swap columns in block above factorized block.
         blas::swap( num_factorized_fixed_cols,
-                & A[ 0 + j * ldim_A ], & i_one,
-                & A[ 0 + k * ldim_A ], & i_one );
+                & A[ 0 + j * ldim_A ], i_one,
+                & A[ 0 + k * ldim_A ], i_one );
       }
     }
   }
 
-  // Remove intermediate jpvt vector.
+  // Remove int64_termediate jpvt vector.
   free( previous_jpvt );
 
   // Return workspace length required.
@@ -362,9 +364,9 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
 
 
 // ============================================================================
-int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
-        int * buff_jpvt, double * buff_tau,
-        int nb_alg, int pp, int panel_pivoting ) {
+int64_t NoFLA_HQRRP_WY_blk_var4( int64_t m_A, int64_t n_A, double * buff_A, int64_t ldim_A,
+        int64_t * buff_jpvt, double * buff_tau,
+        int64_t nb_alg, int64_t pp, int64_t panel_pivoting ) {
 //
 // HQRRP: It computes the Householder QR with Randomized Pivoting of matrix A.
 // This routine is almost compatible with LAPACK's dgeqp3.
@@ -382,7 +384,7 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
 // ----------
 // m_A:            Number of rows of matrix A.
 // n_A:            Number of columns of matrix A.
-// buff_A:         Address/pointer of/to data in matrix A. Matrix A must be 
+// buff_A:         Address/point64_ter of/to data in matrix A. Matrix A must be 
 //                 stored in column-order.
 // ldim_A:         Leading dimension of matrix A.
 // buff_jpvt:      Input/output vector with the pivots.
@@ -398,9 +400,9 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
 // ---------------
 // This code has been created from a libflame code. Hence, you can find some
 // commented calls to libflame routines. We have left them to make it easier
-// to interpret the meaning of the C code.
+// to int64_terpret the meaning of the C code.
 //
-  int     b, j, last_iter, mn_A, m_Y, n_Y, ldim_Y, m_V, n_V, ldim_V, 
+  int64_t     b, j, last_iter, mn_A, m_Y, n_Y, ldim_Y, m_V, n_V, ldim_V, 
           m_W, n_W, ldim_W, n_VR, m_AB1, n_AB1, ldim_T1_T,
           m_A11, n_A11, m_A12, n_A12, m_A21, n_A21, m_A22,
           m_G, n_G, ldim_G;
@@ -409,7 +411,7 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
           * buff_AR, * buff_AB1, * buff_A01, * buff_Y1, * buff_T1_T,
           * buff_A11, * buff_A21, * buff_A12,
           * buff_Y2, * buff_G, * buff_G1, * buff_G2;
-  int     * buff_p, * buff_pB, * buff_p1;
+  int64_t     * buff_p, * buff_pB, * buff_p1;
   double  d_zero = 0.0;
   double  d_one  = 1.0;
 
@@ -466,7 +468,8 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
   NoFLA_Normal_random_matrix( nb_alg + pp, m_A, buff_G, ldim_G );
   //// FLA_Gemm( FLA_NO_TRANSPOSE, FLA_NO_TRANSPOSE, 
   ////           FLA_ONE, G, A, FLA_ZERO, Y );
-  blas::gemm(blas::Op::NoTrans, blas::Op::NoTrans, m_Y, n_Y, m_A, 
+  blas::gemm(blas::Layout::ColMajor,
+             blas::Op::NoTrans, blas::Op::NoTrans, m_Y, n_Y, m_A, 
              d_one, buff_G,  ldim_G, buff_A, ldim_A, 
              d_zero, buff_Y, ldim_Y );
 
@@ -519,7 +522,7 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
 #ifdef CHECK_DOWNDATING_OF_Y
     // Check downdating of matrix Y: Compare downdated matrix Y with 
     // matrix Y computed from scratch.
-    int     m_cyr, n_cyr, ldim_cyr, m_ABR, ii, jj;
+    int64_t     m_cyr, n_cyr, ldim_cyr, m_ABR, ii, jj;
     double  * buff_cyr, aux, sum;
 
     m_cyr    = m_Y;
@@ -536,8 +539,8 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
                       & buff_A[ j + j * ldim_A ], ldim_A,
                d_zero, & buff_cyr[ 0 + 0 * ldim_cyr ], ldim_cyr );
 
-    //// print_double_matrix( "cyr", m_cyr, n_cyr, buff_cyr, ldim_cyr );
-    //// print_double_matrix( "y", m_Y, n_Y, buff_Y, ldim_Y );
+    //// print64_t_double_matrix( "cyr", m_cyr, n_cyr, buff_cyr, ldim_cyr );
+    //// print64_t_double_matrix( "y", m_Y, n_Y, buff_Y, ldim_Y );
     sum = 0.0;
     for( jj = 0; jj < n_cyr; jj++ ) {
       for( ii = 0; ii < m_cyr; ii++ ) {
@@ -554,7 +557,7 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
 
     if( last_iter == 0 ) {
       // Compute QRP of YR, and apply permutations to matrix AR.
-      // A copy of YR is made into VR, and permutations are applied to YR.
+      // A copy of YR is made int64_to VR, and permutations are applied to YR.
       //// FLA_Merge_2x1( ATR,
       ////                ABR,   & AR );
       //// FLA_Copy( YR, VR );
@@ -639,12 +642,12 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
 
 
 // ============================================================================
-static int NoFLA_Normal_random_matrix( int m_A, int n_A, 
-               double * buff_A, int ldim_A ) {
+static int64_t NoFLA_Normal_random_matrix( int64_t m_A, int64_t n_A, 
+               double * buff_A, int64_t ldim_A ) {
 //
 // It generates a random matrix with normal distribution.
 //
-  int  i, j;
+  int64_t  i, j;
 
   // Main loop.
   for ( j = 0; j < n_A; j++ ) {
@@ -658,7 +661,7 @@ static int NoFLA_Normal_random_matrix( int m_A, int n_A,
 
 /* ========================================================================= */
 static double NoFLA_Normal_random_number( double mu, double sigma ) {
-  static int     alternate_calls = 0;
+  static int64_t     alternate_calls = 0;
   static double  b1, b2;
   double         c1, c2, a, factor;
 
@@ -681,14 +684,14 @@ static double NoFLA_Normal_random_number( double mu, double sigma ) {
 }
 
 // ============================================================================
-static int NoFLA_Downdate_Y( 
-               int m_U11, int n_U11, double * buff_U11, int ldim_U11,
-               int m_U21, int n_U21, double * buff_U21, int ldim_U21,
-               int m_A12, int n_A12, double * buff_A12, int ldim_A12,
-               int m_T, int n_T, double * buff_T, int ldim_T,
-               int m_Y2, int n_Y2, double * buff_Y2, int ldim_Y2,
-               int m_G1, int n_G1, double * buff_G1, int ldim_G1,
-               int m_G2, int n_G2, double * buff_G2, int ldim_G2 ) {
+static int64_t NoFLA_Downdate_Y( 
+               int64_t m_U11, int64_t n_U11, double * buff_U11, int64_t ldim_U11,
+               int64_t m_U21, int64_t n_U21, double * buff_U21, int64_t ldim_U21,
+               int64_t m_A12, int64_t n_A12, double * buff_A12, int64_t ldim_A12,
+               int64_t m_T, int64_t n_T, double * buff_T, int64_t ldim_T,
+               int64_t m_Y2, int64_t n_Y2, double * buff_Y2, int64_t ldim_Y2,
+               int64_t m_G1, int64_t n_G1, double * buff_G1, int64_t ldim_G1,
+               int64_t m_G2, int64_t n_G2, double * buff_G2, int64_t ldim_G2 ) {
 //
 // It downdates matrix Y, and updates matrix G.
 // Only Y2 of Y is updated.
@@ -696,13 +699,13 @@ static int NoFLA_Downdate_Y(
 //
 // Y2 = Y2 - ( G1 - ( G1*U11 + G2*U21 ) * T11 * U11' ) * R12.
 //
-  int    i, j;
+  int64_t    i, j;
   double * buff_B;
   double d_one       = 1.0;
   double d_minus_one = -1.0;
-  int    m_B         = m_G1;
-  int    n_B         = n_G1;
-  int    ldim_B      = m_G1;
+  int64_t    m_B         = m_G1;
+  int64_t    n_B         = n_G1;
+  int64_t    ldim_B      = m_G1;
 
   // Create object B.
   //// FLA_Obj_create_conf_to( FLA_NO_TRANSPOSE, G1, & B );
@@ -796,10 +799,10 @@ static int NoFLA_Downdate_Y(
 }
 
 // ============================================================================
-static int NoFLA_Apply_Q_WY_lhfc_blk_var4( 
-               int m_U, int n_U, double * buff_U, int ldim_U,
-               int m_T, int n_T, double * buff_T, int ldim_T,
-               int m_B, int n_B, double * buff_B, int ldim_B ) {
+static int64_t NoFLA_Apply_Q_WY_lhfc_blk_var4( 
+               int64_t m_U, int64_t n_U, double * buff_U, int64_t ldim_U,
+               int64_t m_T, int64_t n_T, double * buff_T, int64_t ldim_T,
+               int64_t m_B, int64_t n_B, double * buff_B, int64_t ldim_B ) {
 //
 // It applies the transpose of a block transformation Q to a matrix B from 
 // the left:
@@ -808,7 +811,7 @@ static int NoFLA_Apply_Q_WY_lhfc_blk_var4(
 //   Q = I - U * T' * U'.
 //
   double  * buff_W;
-  int     ldim_W;
+  int64_t     ldim_W;
 
   // Create auxiliary object.
   //// FLA_Obj_create_conf_to( FLA_NO_TRANSPOSE, B1, & W );
@@ -836,10 +839,10 @@ static int NoFLA_Apply_Q_WY_lhfc_blk_var4(
 }
 
 // ============================================================================
-static int NoFLA_Apply_Q_WY_rnfc_blk_var4( 
-               int m_U, int n_U, double * buff_U, int ldim_U,
-               int m_T, int n_T, double * buff_T, int ldim_T,
-               int m_B, int n_B, double * buff_B, int ldim_B ) {
+static int64_t NoFLA_Apply_Q_WY_rnfc_blk_var4( 
+               int64_t m_U, int64_t n_U, double * buff_U, int64_t ldim_U,
+               int64_t m_T, int64_t n_T, double * buff_T, int64_t ldim_T,
+               int64_t m_B, int64_t n_B, double * buff_B, int64_t ldim_B ) {
 //
 // It applies a block transformation Q to a matrix B from the right:
 //   B = B * Q
@@ -847,7 +850,7 @@ static int NoFLA_Apply_Q_WY_rnfc_blk_var4(
 //   Q = I - U * T' * U'.
 //
   double  * buff_W;
-  int     ldim_W;
+  int64_t     ldim_W;
 
   // Create auxiliary object.
   //// FLA_Obj_create_conf_to( FLA_TRANSPOSE, B1, & W );
@@ -875,12 +878,12 @@ static int NoFLA_Apply_Q_WY_rnfc_blk_var4(
 }
 
 // ============================================================================
-static int NoFLA_QRPmod_WY_unb_var4( int pivoting, int num_stages, 
-               int m_A, int n_A, double * buff_A, int ldim_A,
-               int * buff_p, double * buff_t, 
-               int pivot_B, int m_B, double * buff_B, int ldim_B,
-               int pivot_C, int m_C, double * buff_C, int ldim_C,
-               int build_T, double * buff_T, int ldim_T ) {
+static int64_t NoFLA_QRPmod_WY_unb_var4( int64_t pivoting, int64_t num_stages, 
+               int64_t m_A, int64_t n_A, double * buff_A, int64_t ldim_A,
+               int64_t * buff_p, double * buff_t, 
+               int64_t pivot_B, int64_t m_B, double * buff_B, int64_t ldim_B,
+               int64_t pivot_C, int64_t m_C, double * buff_C, int64_t ldim_C,
+               int64_t build_T, double * buff_T, int64_t ldim_T ) {
 //
 // It computes an unblocked QR factorization of matrix A with or without 
 // pivoting. Matrices B and C are optionally pivoted, and matrix T is
@@ -895,7 +898,7 @@ static int NoFLA_QRPmod_WY_unb_var4( int pivoting, int num_stages,
 // "pivot_C": if "pivot_C" is true, matrix "C" is pivoted too.
 // "build_T": if "build_T" is true, matrix "T" is built.
 //
-  int     j, mn_A, m_a21, m_A22, n_A22, n_dB, idx_max_col, 
+  int64_t     j, mn_A, m_a21, m_A22, n_A22, n_dB, idx_max_col, 
           i_one = 1, n_house_vector, m_rest;
   double  * buff_d, * buff_e, * buff_workspace, diag;
 
@@ -915,7 +918,7 @@ static int NoFLA_QRPmod_WY_unb_var4( int pivoting, int num_stages,
   buff_workspace = ( double * ) malloc( n_A * sizeof( double ) );
 
   if( pivoting == 1 ) {
-    // Compute initial norms of A into d and e.
+    // Compute initial norms of A int64_to d and e.
     NoFLA_QRP_compute_norms( m_A, n_A, buff_A, ldim_A, buff_d, buff_e );
   }
 
@@ -964,7 +967,7 @@ static int NoFLA_QRPmod_WY_unb_var4( int pivoting, int num_stages,
         & buff_t[ j ],
         & buff_A[ j + ( j+1 ) * ldim_A ], & ldim_A,
         buff_workspace
-        #ifdef LAPACK_FORTRAN_STRLEN_END,
+        #ifdef LAPACK_FORTRAN_STRLEN_END
         , 1
         #endif
         );
@@ -1001,14 +1004,14 @@ static int NoFLA_QRPmod_WY_unb_var4( int pivoting, int num_stages,
 }
 
 // ============================================================================
-static int NoFLA_QRP_compute_norms(
-               int m_A, int n_A, double * buff_A, int ldim_A,
+static int64_t NoFLA_QRP_compute_norms(
+               int64_t m_A, int64_t n_A, double * buff_A, int64_t ldim_A,
                double * buff_d, double * buff_e ) {
 //
-// It computes the column norms of matrix A. The norms are stored into 
+// It computes the column norms of matrix A. The norms are stored int64_to 
 // vectors d and e.
 //
-  int     j, i_one = 1;
+  int64_t     j, i_one = 1;
 
   // Main loop.
   for( j = 0; j < n_A; j++ ) {
@@ -1023,15 +1026,15 @@ static int NoFLA_QRP_compute_norms(
 }
 
 // ============================================================================
-static int NoFLA_QRP_downdate_partial_norms( int m_A, int n_A,
-               double * buff_d,  int st_d,
-               double * buff_e,  int st_e,
-               double * buff_wt, int st_wt,
-               double * buff_A,  int ldim_A ) {
+static int64_t NoFLA_QRP_downdate_partial_norms( int64_t m_A, int64_t n_A,
+               double * buff_d,  int64_t st_d,
+               double * buff_e,  int64_t st_e,
+               double * buff_wt, int64_t st_wt,
+               double * buff_A,  int64_t ldim_A ) {
 //
 // It updates (downdates) the column norms of matrix A. It uses Drmac's method.
 //
-  int     j, i_one = 1;
+  int64_t     j, i_one = 1;
   double  * ptr_d, * ptr_e, * ptr_wt, * ptr_A;
   double  temp, temp2, temp5, tol3z;
   // double  dnrm2_(), dlamch_();
@@ -1106,17 +1109,17 @@ static int NoFLA_QRP_downdate_partial_norms( int m_A, int n_A,
 
 
 // ============================================================================
-static int NoFLA_QRP_pivot_G_B_C( int j_max_col,
-               int m_G, double * buff_G, int ldim_G, 
-               int pivot_B, int m_B, double * buff_B, int ldim_B, 
-               int pivot_C, int m_C, double * buff_C, int ldim_C, 
-               int * buff_p,
+static int64_t NoFLA_QRP_pivot_G_B_C( int64_t j_max_col,
+               int64_t m_G, double * buff_G, int64_t ldim_G, 
+               int64_t pivot_B, int64_t m_B, double * buff_B, int64_t ldim_B, 
+               int64_t pivot_C, int64_t m_C, double * buff_C, int64_t ldim_C, 
+               int64_t * buff_p,
                double * buff_d, double * buff_e ) {
 //
 // It pivots matrix G, pivot vector p, and norms vectors d and e.
 // Matrices B and C are optionally pivoted.
 //
-  int     ival, i_one = 1;
+  int64_t     ival, i_one = 1;
   double  * ptr_g1, * ptr_g2, * ptr_b1, * ptr_b2, * ptr_c1, * ptr_c2;
 
   // Swap columns of G, pivots, and norms.
