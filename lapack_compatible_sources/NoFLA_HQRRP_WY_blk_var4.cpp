@@ -45,22 +45,16 @@ WITHOUT ANY WARRANTY EXPRESSED OR IMPLIED.
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "NoFLA_HQRRP_WY_blk_var4.h"
 #include <blas.hh>
 #include <lapack.hh>
 #include <lapack/fortran.h>
 #include <lapack/config.h>
+#include "NoFLA_HQRRP_WY_blk_var4.h"
 
-
-// Matrices with dimensions smaller than THRESHOLD_FOR_DGEQPF are processed 
-// with LAPACK's routine dgeqpf.
-// Matrices with dimensions between THRESHOLD_FOR_DGEQPF and 
-// THRESHOLD_FOR_DGEQP3 are processed with LAPACK's routine dgeqp3.
 // Matrices with dimensions larger than THRESHOLD_FOR_DGEQP3 are processed 
 // with the new HQRRP code.
-#define THRESHOLD_FOR_DGEQPF   -1
 #define THRESHOLD_FOR_DGEQP3  -1
-
+#define int64_t lapack_int
 
 // ============================================================================
 // Definition of macros.
@@ -152,6 +146,8 @@ void dgeqp4( int64_t * m, int64_t * n, double * A, int64_t * lda, int64_t * jpvt
   mn_A   = min( m_A, n_A );
   ldim_A = * lda;
 
+  int ineg_one = -1;
+
   // Check input arguments.
   * info = 0;
   lquery = ( * lwork == -1 );
@@ -169,58 +165,33 @@ void dgeqp4( int64_t * m, int64_t * n, double * A, int64_t * lda, int64_t * jpvt
       lwkopt = 1;
     } else {
       /*
-      Uses ILAENV: http://www.netlib.org/lapack/explore-html/d5/d7c/group__aux__lin_gab1f37bde76d31aee91a09bb2f8e87ce6.html
-      -- that's part of LAPACK's testing routines.
+      This code block originally called ilaenv_ in order to find the optimal "nb",
+      then set lwkopt = 2 * n_A + (n_A + 1) * nb.
 
-      This is only relevant for the GEQRF codepath, which deals with small matrices.
-      */
+      We can't do that because LAPACK++ doesn't expose ILAENV, but we can look at what
+      LAPACK++ does and back out a valid value for "nb".
       
-      /*
-      nb     = ilaenv_( & INB, "DGEQRF", ' ', & m_A, & n_A, & i_minus_one, 
-                        & i_minus_one );
-      lwkopt = 2 * n_A + ( n_A + 1 ) * nb;
+          LAPACK++ gets the workspace by calling DGEQRF
+          https://bitbucket.org/icl/lapackpp/src/7f1feb420fd94332200ac0636bab451157cbee6d/src/geqrf.cc#lines-81:92
+          
+          DGEQRF calls ILAENV to get NB, and then sets LWKOPT to N*NB, where N is the number of cols in A
+          https://github.com/Reference-LAPACK/lapack/blob/a066b6a08f23186f2f38f1d9167f6616528ad89f/SRC/dgeqrf.f#L200
+
+          So we'll call DGEQRF to get LWKOPT_DETERM, assume LWKOPT_DETERM = NB*N, then set NB = LWKOPT_DETERM / N.
       */
       iws    = 3 * n_A + 1;
       double qry_work[1];
-      int64_t ineg_one = -1;
-      int64_t m_A_ = (int64_t) m_A;
-      int64_t n_A_ = (int64_t) n_A;
-      int64_t lda_ = (int64_t) lda;
       LAPACK_dgeqrf(
-          & m_A_, & n_A_,
-          A, & lda_,
+          & m_A, & n_A,
+          A, & ldim_A,
           tau,
           qry_work, &ineg_one, info );
       if (info < 0) {
           throw blas::Error();
       }
-      int64_t lwork_ = real(qry_work[0]);
-      int64_t nb_lapack = ((int64_t) lwork_) / n_A;
-      lwkopt = 2 * n_A + (n_A + 1) * nb_lapack;
-      /*
-      LAPACK++ gets the workspace by calling DGEQRF, rather than by 
-      https://bitbucket.org/icl/lapackpp/src/7f1feb420fd94332200ac0636bab451157cbee6d/src/geqrf.cc#lines-81:92
-
-      ^ But that hides the optimal "nb" parameter. So I should look at how LAPACK's
-      dgeqrf decides work parameters and see if I can find an optimal "nb". Might also see
-      if they have the same formula for opt_work given their balue of nb.
-      
-      DQEQRF calls ILAENV to get NB:
-      https://github.com/Reference-LAPACK/lapack/blob/a066b6a08f23186f2f38f1d9167f6616528ad89f/SRC/dgeqrf.f#L181
-      
-      They set LWKOPT to N*NB, where N is number of cols in A: 
-      https://github.com/Reference-LAPACK/lapack/blob/a066b6a08f23186f2f38f1d9167f6616528ad89f/SRC/dgeqrf.f#L200
-      
-      ILAENV's codepath for XGEQRF is
-      https://github.com/Reference-LAPACK/lapack/blob/77a0ceb6c9a3c757e7039027f1f324e2811e6ee0/TESTING/LIN/ilaenv.f#L184-L189
-      
-      Note that this implementation of HQRRP only calls ILAENV with third argument N3 == -1,
-      so we can deduce that the appropriate value of ILAENV is set here:
-      https://github.com/Reference-LAPACK/lapack/blob/77a0ceb6c9a3c757e7039027f1f324e2811e6ee0/TESTING/LIN/ilaenv.f#L188
-      Problem: still not sure how to access that value.
-
-      One way forward: assume LWKOPT is set to NB*N, call DGEQRF to get LWKOPT_DETERM, then set NB = LWKOPT_DETERM / N.
-      */
+      int64_t lwork_determ = real(qry_work[0]);
+      int64_t nb = ((int64_t) lwork_determ) / n_A;
+      lwkopt = 2 * n_A + (n_A + 1) * nb;
     }
     work[ 0 ] = ( double ) lwkopt;
 
@@ -241,14 +212,11 @@ void dgeqp4( int64_t * m, int64_t * n, double * A, int64_t * lda, int64_t * jpvt
   }
 
   // Use LAPACK's DGEQPF or DGEQP3 for small matrices.
-  if( mn_A < THRESHOLD_FOR_DGEQPF ) {
-    // Call to LAPACK routine.
-    //// printf( "Calling dgeqpf\n" );
-    //LAPACK_dgeqpf( m, n, A, lda, jpvt, tau, work, info ); // riley comment out
-    return;
-  } else if( mn_A < THRESHOLD_FOR_DGEQP3 ) {
+  if( mn_A < THRESHOLD_FOR_DGEQP3 ) {
     //// printf( "Calling dgeqp3\n" );
-    LAPACK_dgeqp3( m, n, A, lda, jpvt, tau, work, lwork, info );
+    LAPACK_dgeqp3( & m_A,
+                   & n_A, A,
+                   & ldim_A, jpvt, tau, work, lwork, info );
     return;
   }
 
@@ -275,7 +243,7 @@ void dgeqp4( int64_t * m, int64_t * n, double * A, int64_t * lda, int64_t * jpvt
   num_factorized_fixed_cols = min( m_A, num_fixed_cols );
   if( num_factorized_fixed_cols > 0 ) {
     LAPACK_dgeqrf( & m_A, & num_factorized_fixed_cols, A, & ldim_A, tau, work, lwork,
-             info );
+                   info );
     if( * info != 0 ) {
       fprintf( stderr, "ERROR in dgeqrf: Info: %d \n", (int) (*info) );
     }
@@ -302,7 +270,7 @@ void dgeqp4( int64_t * m, int64_t * n, double * A, int64_t * lda, int64_t * jpvt
     }
   }
 
-  // Create int64_termediate jpvt vector.
+  // Create intermediate jpvt vector.
   previous_jpvt = ( int64_t * ) malloc( n_A * sizeof( int64_t ) );
 
   // Save a copy of jpvt vector.
@@ -352,15 +320,13 @@ void dgeqp4( int64_t * m, int64_t * n, double * A, int64_t * lda, int64_t * jpvt
     }
   }
 
-  // Remove int64_termediate jpvt vector.
+  // Remove intermediate jpvt vector.
   free( previous_jpvt );
 
   // Return workspace length required.
   work[ 0 ] = iws;
   return;
 }
-
-// RILEY NOTE: this is where you left off. Need to replace all LAPACK and BLAS calls below here.
 
 
 // ============================================================================
@@ -384,7 +350,7 @@ int64_t NoFLA_HQRRP_WY_blk_var4( int64_t m_A, int64_t n_A, double * buff_A, int6
 // ----------
 // m_A:            Number of rows of matrix A.
 // n_A:            Number of columns of matrix A.
-// buff_A:         Address/point64_ter of/to data in matrix A. Matrix A must be 
+// buff_A:         Address/pointer of/to data in matrix A. Matrix A must be 
 //                 stored in column-order.
 // ldim_A:         Leading dimension of matrix A.
 // buff_jpvt:      Input/output vector with the pivots.
@@ -400,7 +366,7 @@ int64_t NoFLA_HQRRP_WY_blk_var4( int64_t m_A, int64_t n_A, double * buff_A, int6
 // ---------------
 // This code has been created from a libflame code. Hence, you can find some
 // commented calls to libflame routines. We have left them to make it easier
-// to int64_terpret the meaning of the C code.
+// to interpret the meaning of the C code.
 //
   int64_t     b, j, last_iter, mn_A, m_Y, n_Y, ldim_Y, m_V, n_V, ldim_V, 
           m_W, n_W, ldim_W, n_VR, m_AB1, n_AB1, ldim_T1_T,
@@ -539,8 +505,8 @@ int64_t NoFLA_HQRRP_WY_blk_var4( int64_t m_A, int64_t n_A, double * buff_A, int6
                       & buff_A[ j + j * ldim_A ], ldim_A,
                d_zero, & buff_cyr[ 0 + 0 * ldim_cyr ], ldim_cyr );
 
-    //// print64_t_double_matrix( "cyr", m_cyr, n_cyr, buff_cyr, ldim_cyr );
-    //// print64_t_double_matrix( "y", m_Y, n_Y, buff_Y, ldim_Y );
+    //// print_double_matrix( "cyr", m_cyr, n_cyr, buff_cyr, ldim_cyr );
+    //// print_double_matrix( "y", m_Y, n_Y, buff_Y, ldim_Y );
     sum = 0.0;
     for( jj = 0; jj < n_cyr; jj++ ) {
       for( ii = 0; ii < m_cyr; ii++ ) {
@@ -985,14 +951,10 @@ static int64_t NoFLA_QRPmod_WY_unb_var4( int64_t pivoting, int64_t num_stages,
 
   // Build T.
   if( build_T ) {
-    char direction_ = lapack::direction2char( lapack::Direction::Forward );
-    char storev_ = lapack::storev2char( lapack::StoreV::Columnwise );
-    LAPACK_dlarft( & direction_, & storev_, & m_A, & num_stages, buff_A, & ldim_A, 
-             buff_t, buff_T, & ldim_T
-             #ifdef LAPACK_FORTRAN_STRLEN_END
-             , 1, 1
-             #endif
-             );
+    lapack::larft( lapack::Direction::Forward,
+                   lapack::StoreV::Columnwise,
+                   m_A, num_stages, buff_A, ldim_A, 
+                   buff_t, buff_T, ldim_T);
   }
 
   // Remove auxiliary vectors.

@@ -4,10 +4,12 @@
 #include <blas.hh>
 #include <lapack.hh>
 #include <lapack/fortran.h>
-#include <NoFLA_HQRRP_WY_blk_var4.h>
+#include <NoFLA_HQRRP_WY_blk_var4.h> // must be included AFTER lapack.
 
 #define max( a, b ) ( (a) > (b) ? (a) : (b) )
 #define min( a, b ) ( (a) < (b) ? (a) : (b) )
+
+#define int64_t lapack_int
 
 // #define PRINT_DATA
 
@@ -37,8 +39,8 @@ int main( int argc, char *argv[] ) {
   int64_t     * buff_p;
 
   // Create matrix A, vector p, vector s, and matrix Q.
-  m_A      = 7;
-  n_A      = 5;
+  m_A      = 300;
+  n_A      = 100;
   mn_A     = min( m_A, n_A );
   buff_A   = ( double * ) malloc( m_A * n_A * sizeof( double ) );
   ldim_A   = max( 1, m_A );

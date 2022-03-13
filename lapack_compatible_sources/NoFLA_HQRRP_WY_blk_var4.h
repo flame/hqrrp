@@ -1,8 +1,9 @@
 
-void dgeqp4( int64_t * m, int64_t * n, double * A, int64_t * lda, int64_t * jpvt, double * tau,
-         double * work, int64_t * lwork, int64_t * info );
 
-int64_t NoFLA_HQRRP_WY_blk_var4( int64_t m_A, int64_t n_A, double * buff_A, int64_t ldim_A,
-        int64_t * buff_jpvt, double * buff_tau,
-        int64_t nb_alg, int64_t pp, int64_t panel_pivoting );
+void dgeqp4( lapack_int * m, lapack_int * n, double * A, lapack_int * lda, lapack_int * jpvt, double * tau,
+         double * work, lapack_int * lwork, lapack_int * info );
+
+lapack_int NoFLA_HQRRP_WY_blk_var4( lapack_int m_A, lapack_int n_A, double * buff_A, lapack_int ldim_A,
+        lapack_int * buff_jpvt, double * buff_tau,
+        lapack_int nb_alg, lapack_int pp, lapack_int panel_pivoting );
 
