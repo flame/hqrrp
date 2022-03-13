@@ -142,8 +142,8 @@ void dgeqp4( int64_t * m, int64_t * n, double * A, int64_t * lda, int64_t * jpvt
           minus_info, iws, lwkopt, j, k, num_fixed_cols, n_rest, itmp;
   int64_t     * previous_jpvt;
 
-  //typedef lapack::lapack::lapack_int lapack::lapack_int;
-  //using lapack::lapack::lapack_int;
+  //typedef lapack::int64_t int64_t;
+  //using lapack::int64_t;
   using blas::real;
 
   // Some initializations.
@@ -182,19 +182,19 @@ void dgeqp4( int64_t * m, int64_t * n, double * A, int64_t * lda, int64_t * jpvt
       */
       iws    = 3 * n_A + 1;
       double qry_work[1];
-      lapack::lapack_int ineg_one = -1;
-      lapack::lapack_int m_A_ = (lapack::lapack_int) m_A;
-      lapack::lapack_int n_A_ = (lapack::lapack_int) n_A;
-      lapack::lapack_int lda_ = (lapack::lapack_int) lda;
+      int64_t ineg_one = -1;
+      int64_t m_A_ = (int64_t) m_A;
+      int64_t n_A_ = (int64_t) n_A;
+      int64_t lda_ = (int64_t) lda;
       LAPACK_dgeqrf(
           & m_A_, & n_A_,
           A, & lda_,
           tau,
-          qry_work, & ineg_one, & info );
+          qry_work, &ineg_one, info );
       if (info < 0) {
           throw blas::Error();
       }
-      lapack::lapack_int lwork_ = real(qry_work[0]);
+      int64_t lwork_ = real(qry_work[0]);
       int64_t nb_lapack = ((int64_t) lwork_) / n_A;
       lwkopt = 2 * n_A + (n_A + 1) * nb_lapack;
       /*
@@ -277,7 +277,7 @@ void dgeqp4( int64_t * m, int64_t * n, double * A, int64_t * lda, int64_t * jpvt
     LAPACK_dgeqrf( & m_A, & num_factorized_fixed_cols, A, & ldim_A, tau, work, lwork,
              info );
     if( * info != 0 ) {
-      fprintf( stderr, "ERROR in dgeqrf: Info: %d \n", * info );
+      fprintf( stderr, "ERROR in dgeqrf: Info: %d \n", (int) (*info) );
     }
     iws = max( iws, ( int64_t ) work[ 0 ] );
     if( num_factorized_fixed_cols < n_A ) {
@@ -295,7 +295,7 @@ void dgeqp4( int64_t * m, int64_t * n, double * A, int64_t * lda, int64_t * jpvt
               #endif 
                );
       if( * info != 0 ) {
-        fprintf( stderr, "ERROR in dormqr: Info: %d \n", * info );
+        fprintf( stderr, "ERROR in dormqr: Info: %d \n", (int) (*info) );
       }
 
       iws = max( iws, ( int64_t ) work[ 0 ] );
