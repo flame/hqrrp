@@ -32,7 +32,7 @@ Copyright (C) 2016,
   Universitat Jaume I,
   University of Colorado at Boulder,
   The University of Texas at Austin.
-
+/home/riley/Documents/Research/software/hqrrp/lapack_compatible_sources/simple_test.cpp:87:47
 ===============================================================================
 Disclaimer
 ===============================================================================
@@ -59,7 +59,7 @@ WITHOUT ANY WARRANTY EXPRESSED OR IMPLIED.
 // Matrices with dimensions larger than THRESHOLD_FOR_DGEQP3 are processed 
 // with the new HQRRP code.
 #define THRESHOLD_FOR_DGEQPF   -1
-#define THRESHOLD_FOR_DGEQP3  1000
+#define THRESHOLD_FOR_DGEQP3  -1
 
 
 // ============================================================================
@@ -257,7 +257,7 @@ void dgeqp4( int64_t * m, int64_t * n, double * A, int64_t * lda, int64_t * jpvt
   for( j = 0; j < n_A; j++ ) {
     if( jpvt[ j ] != 0 ) {
       if( j != num_fixed_cols ) {
-        //// printf( "Swapping columns: %d %d \n", j, num_fixed_cols );
+        printf( "Swapping columns: %d %d \n", (int) j, (int) num_fixed_cols );
         blas::swap( m_A, & A[ 0 + j              * ldim_A ], i_one, 
                          & A[ 0 + num_fixed_cols * ldim_A ], i_one );
         jpvt[ j ] = jpvt[ num_fixed_cols ];
@@ -295,7 +295,7 @@ void dgeqp4( int64_t * m, int64_t * n, double * A, int64_t * lda, int64_t * jpvt
               #endif 
                );
       if( * info != 0 ) {
-        fprintf( stderr, "ERROR in dormqr: Info: %d \n", (int) (*info) );
+        fprintf( stderr, "ERROR in dormqr: Info: %d \n", (int) (*info ));
       }
 
       iws = max( iws, ( int64_t ) work[ 0 ] );
