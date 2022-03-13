@@ -287,7 +287,11 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
                & m_A, & n_rest, & num_factorized_fixed_cols,
                A, & ldim_A, tau,
                & A[ 0 + num_factorized_fixed_cols * ldim_A ], & ldim_A, 
-               work, lwork, info );
+               work, lwork, info
+              #ifdef LAPACK_FORTRAN_STRLEN_END
+              , 1, 1
+              #endif 
+               );
       if( * info != 0 ) {
         fprintf( stderr, "ERROR in dormqr: Info: %d \n", * info );
       }
@@ -557,7 +561,11 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
       //// FLA_QRPmod_WY_unb_var4( 1, bRow, VR, pB, sB, 1, AR, 1, YR, 0, None );
       char matrixtype_ = matrixtype2char( lapack::MatrixType::General );
       LAPACK_dlacpy( &matrixtype_, & m_V, & n_VR, buff_YR, & ldim_Y,
-                                     buff_VR, & ldim_V );
+                                     buff_VR, & ldim_V
+                    #ifdef LAPACK_FORTRAN_STRLEN_END
+                    , 1
+                    #endif
+                    );
       NoFLA_QRPmod_WY_unb_var4( 1, b,
           m_V, n_VR, buff_VR, ldim_V, buff_pB, buff_sB,
           1, m_A, buff_AR, ldim_A,
@@ -705,7 +713,11 @@ static int NoFLA_Downdate_Y(
   char matrixtype_ = lapack::matrixtype2char( lapack::MatrixType::General );
   LAPACK_dlacpy(&matrixtype_, & m_G1, & n_G1,
                               buff_G1, & ldim_G1,
-                              buff_B, & ldim_B );
+                              buff_B, & ldim_B
+                #ifdef LAPACK_FORTRAN_STRLEN_END
+                , 1
+                #endif
+                );
 
   // B = B * U11.
   //// FLA_Trmm( FLA_RIGHT, FLA_LOWER_TRIANGULAR,
@@ -810,7 +822,11 @@ static int NoFLA_Apply_Q_WY_lhfc_blk_var4(
   char storev_ = lapack::storev2char( lapack::StoreV::Columnwise );
   LAPACK_dlarfb( & side_, & trans_, & direction_, & storev_, 
                  & m_B, & n_B, & n_U, buff_U, & ldim_U, buff_T, & ldim_T, 
-                 buff_B, & ldim_B, buff_W, & ldim_W );
+                 buff_B, & ldim_B, buff_W, & ldim_W
+                 #ifdef LAPACK_FORTRAN_STRLEN_END
+                 , 1, 1, 1, 1
+                 #endif
+                 );
 
   // Remove auxiliary object.
   //// FLA_Obj_free( & W );
@@ -845,7 +861,11 @@ static int NoFLA_Apply_Q_WY_rnfc_blk_var4(
   char storev_ = lapack::storev2char( lapack::StoreV::Columnwise );
   LAPACK_dlarfb( & side_, & trans_, & direction_, & storev_,  
                  & m_B, & n_B, & n_U, buff_U, & ldim_U, buff_T, & ldim_T, 
-                 buff_B, & ldim_B, buff_W, & ldim_W );
+                 buff_B, & ldim_B, buff_W, & ldim_W
+                 #ifdef LAPACK_FORTRAN_STRLEN_END
+                 , 1, 1, 1, 1
+                 #endif
+                 );
 
   // Remove auxiliary object.
   //// FLA_Obj_free( & W );
@@ -943,7 +963,11 @@ static int NoFLA_QRPmod_WY_unb_var4( int pivoting, int num_stages,
         & buff_A[ j + j * ldim_A ], & i_one,
         & buff_t[ j ],
         & buff_A[ j + ( j+1 ) * ldim_A ], & ldim_A,
-        buff_workspace );
+        buff_workspace
+        #ifdef LAPACK_FORTRAN_STRLEN_END,
+        , 1
+        #endif
+        );
     buff_A[ j + j * ldim_A ] = diag;
 
     if( pivoting == 1 ) {
@@ -961,7 +985,11 @@ static int NoFLA_QRPmod_WY_unb_var4( int pivoting, int num_stages,
     char direction_ = lapack::direction2char( lapack::Direction::Forward );
     char storev_ = lapack::storev2char( lapack::StoreV::Columnwise );
     LAPACK_dlarft( & direction_, & storev_, & m_A, & num_stages, buff_A, & ldim_A, 
-             buff_t, buff_T, & ldim_T );
+             buff_t, buff_T, & ldim_T
+             #ifdef LAPACK_FORTRAN_STRLEN_END
+             , 1, 1
+             #endif
+             );
   }
 
   // Remove auxiliary vectors.
@@ -1037,7 +1065,12 @@ static int NoFLA_QRP_downdate_partial_norms( int m_A, int n_A,
   */
 
   // Some initializations.
-  tol3z = sqrt( LAPACK_dlamch( "Epsilon" ) );
+  char dlmach_param = 'E';
+  tol3z = sqrt( LAPACK_dlamch( & dlmach_param
+    #ifdef LAPACK_FORTRAN_STRLEN_END
+    , 1
+    #endif
+   ) );
   ptr_d  = buff_d;
   ptr_e  = buff_e;
   ptr_wt = buff_wt;
