@@ -13,11 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: webfactory/ssh-agent
-        uses: webfactory/ssh-agent@v0.5.4
-        with:
-            ssh-private-key: ${{ secrets.PRIVATE_CLONE_SSH_KEY }}
-
       - name: configure OS
         run: |
           # os level stuff
@@ -44,13 +39,6 @@ jobs:
               ../blaspp
           make -j2 install
 
-      - name: install Random123  
-        run: |
-          cd ..
-          git clone https://github.com/DEShawResearch/random123.git
-          cd random123/
-          make prefix=`pwd`/../random123-install install-include
-      
       - name: install LAPACK++
         run: |
           cd ..
@@ -65,7 +53,7 @@ jobs:
               `pwd`/../lapackpp
           make -j2 install
 
-      - name: build RandLAPACK
+      - name: build HQRRP
         run: |
           cd ..
           mkdir HQRRP-build
