@@ -46,6 +46,9 @@ WITHOUT ANY WARRANTY EXPRESSED OR IMPLIED.
 #include <stdio.h>
 #include <math.h>
 #include "NoFLA_HQRRP_WY_blk_var4.h"
+#include <blas.hh>
+#include <lapack.hh>
+#include <lapack/fortran.h>
 
 
 // Matrices with dimensions smaller than THRESHOLD_FOR_DGEQPF are processed 
@@ -137,7 +140,9 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
           m_A, n_A, mn_A, ldim_A, lquery, nb, num_factorized_fixed_cols, 
           minus_info, iws, lwkopt, j, k, num_fixed_cols, n_rest, itmp;
   int     * previous_jpvt;
-  int     ilaenv_();
+
+  typedef lapack::lapack_int lapack_int;
+  using blas::real;
 
   // Some initializations.
   m_A    = * m;
@@ -161,10 +166,59 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
       iws    = 1;
       lwkopt = 1;
     } else {
-      iws    = 3 * n_A + 1;
+      /*
+      Uses ILAENV: http://www.netlib.org/lapack/explore-html/d5/d7c/group__aux__lin_gab1f37bde76d31aee91a09bb2f8e87ce6.html
+      -- that's part of LAPACK's testing routines.
+
+      This is only relevant for the GEQRF codepath, which deals with small matrices.
+      */
+      
+      /*
       nb     = ilaenv_( & INB, "DGEQRF", ' ', & m_A, & n_A, & i_minus_one, 
                         & i_minus_one );
       lwkopt = 2 * n_A + ( n_A + 1 ) * nb;
+      */
+      iws    = 3 * n_A + 1;
+      double qry_work[1];
+      lapack_int ineg_one = -1;
+      lapack_int m_A_ = (lapack_int) m_A;
+      lapack_int n_A_ = (lapack_int) n_A;
+      lapack_int lda_ = (lapack_int) lda;
+      LAPACK_dgeqrf(
+          &m_A_, &n_A_,
+          A, &lda_,
+          tau,
+          qry_work, &ineg_one, &info_ );
+      if (info_ < 0) {
+          throw Error();
+      }
+      lapack_int lwork_ = real(qry_work[0]);
+      int nb_lapack = ((int) lwork_) / n_A;
+      lwkopt = 2 * n_A + (n_A + 1) * nb_lapack;
+      /*
+      LAPACK++ gets the workspace by calling DGEQRF, rather than by 
+      https://bitbucket.org/icl/lapackpp/src/7f1feb420fd94332200ac0636bab451157cbee6d/src/geqrf.cc#lines-81:92
+
+      ^ But that hides the optimal "nb" parameter. So I should look at how LAPACK's
+      dgeqrf decides work parameters and see if I can find an optimal "nb". Might also see
+      if they have the same formula for opt_work given their balue of nb.
+      
+      DQEQRF calls ILAENV to get NB:
+      https://github.com/Reference-LAPACK/lapack/blob/a066b6a08f23186f2f38f1d9167f6616528ad89f/SRC/dgeqrf.f#L181
+      
+      They set LWKOPT to N*NB, where N is number of cols in A: 
+      https://github.com/Reference-LAPACK/lapack/blob/a066b6a08f23186f2f38f1d9167f6616528ad89f/SRC/dgeqrf.f#L200
+      
+      ILAENV's codepath for XGEQRF is
+      https://github.com/Reference-LAPACK/lapack/blob/77a0ceb6c9a3c757e7039027f1f324e2811e6ee0/TESTING/LIN/ilaenv.f#L184-L189
+      
+      Note that this implementation of HQRRP only calls ILAENV with third argument N3 == -1,
+      so we can deduce that the appropriate value of ILAENV is set here:
+      https://github.com/Reference-LAPACK/lapack/blob/77a0ceb6c9a3c757e7039027f1f324e2811e6ee0/TESTING/LIN/ilaenv.f#L188
+      Problem: still not sure how to access that value.
+
+      One way forward: assume LWKOPT is set to NB*N, call DGEQRF to get LWKOPT_DETERM, then set NB = LWKOPT_DETERM / N.
+      */
     }
     work[ 0 ] = ( double ) lwkopt;
 
@@ -174,9 +228,7 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
   }
 
   if( * info != 0 ) {
-    minus_info = - * info;
-    xerbla_( "DGEQP3", & minus_info );
-    return;
+    throw Error();
   } else if( lquery ) {
     return;
   }
@@ -190,11 +242,11 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
   if( mn_A < THRESHOLD_FOR_DGEQPF ) {
     // Call to LAPACK routine.
     //// printf( "Calling dgeqpf\n" );
-    dgeqpf_( m, n, A, lda, jpvt, tau, work, info );
+    LAPACK_dgeqpf( m, n, A, lda, jpvt, tau, work, info );
     return;
   } else if( mn_A < THRESHOLD_FOR_DGEQP3 ) {
     //// printf( "Calling dgeqp3\n" );
-    dgeqp3_( m, n, A, lda, jpvt, tau, work, lwork, info );
+    LAPACK_dgeqp3( m, n, A, lda, jpvt, tau, work, lwork, info );
     return;
   }
 
@@ -204,8 +256,8 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
     if( jpvt[ j ] != 0 ) {
       if( j != num_fixed_cols ) {
         //// printf( "Swapping columns: %d %d \n", j, num_fixed_cols );
-        dswap_( & m_A, & A[ 0 + j              * ldim_A ], & i_one, 
-                       & A[ 0 + num_fixed_cols * ldim_A ], & i_one );
+        blas::swap( m_A, & A[ 0 + j              * ldim_A ], i_one, 
+                         & A[ 0 + num_fixed_cols * ldim_A ], i_one );
         jpvt[ j ] = jpvt[ num_fixed_cols ];
         jpvt[ num_fixed_cols ] = j + 1;
       } else {
@@ -220,7 +272,7 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
   // Factorize fixed columns at the front.
   num_factorized_fixed_cols = min( m_A, num_fixed_cols );
   if( num_factorized_fixed_cols > 0 ) {
-    dgeqrf_( & m_A, & num_factorized_fixed_cols, A, & ldim_A, tau, work, lwork,
+    LAPACK_dgeqrf( & m_A, & num_factorized_fixed_cols, A, & ldim_A, tau, work, lwork,
              info );
     if( * info != 0 ) {
       fprintf( stderr, "ERROR in dgeqrf: Info: %d \n", * info );
@@ -228,7 +280,10 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
     iws = max( iws, ( int ) work[ 0 ] );
     if( num_factorized_fixed_cols < n_A ) {
       n_rest = n_A - num_factorized_fixed_cols;
-      dormqr_( "Left", "Transpose", 
+
+      char side_ = blas::side2char(blas::Side::Left);
+      char trans_ = blas::op2char(lapack::Op::Trans);
+      LAPACK_dormqr(& side_, & trans_,
                & m_A, & n_rest, & num_factorized_fixed_cols,
                A, & ldim_A, tau,
                & A[ 0 + num_factorized_fixed_cols * ldim_A ], & ldim_A, 
@@ -284,7 +339,7 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
         previous_jpvt[ k ] = itmp;
 
         // Swap columns in block above factorized block.
-        dswap_( & num_factorized_fixed_cols,
+        blas::swap( num_factorized_fixed_cols,
                 & A[ 0 + j * ldim_A ], & i_one,
                 & A[ 0 + k * ldim_A ], & i_one );
       }
@@ -298,6 +353,9 @@ void dgeqp4( int * m, int * n, double * A, int * lda, int * jpvt, double * tau,
   work[ 0 ] = iws;
   return;
 }
+
+// RILEY NOTE: this is where you left off. Need to replace all LAPACK and BLAS calls below here.
+
 
 // ============================================================================
 int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
@@ -404,9 +462,9 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
   NoFLA_Normal_random_matrix( nb_alg + pp, m_A, buff_G, ldim_G );
   //// FLA_Gemm( FLA_NO_TRANSPOSE, FLA_NO_TRANSPOSE, 
   ////           FLA_ONE, G, A, FLA_ZERO, Y );
-  dgemm_( "No tranpose", "No transpose", & m_Y, & n_Y, & m_A, 
-          & d_one, buff_G, & ldim_G, buff_A, & ldim_A, 
-          & d_zero, buff_Y, & ldim_Y );
+  blas::gemm(blas::Op::NoTrans, blas::Op::NoTrans, m_Y, n_Y, m_A, 
+             d_one, buff_G,  ldim_G, buff_A, ldim_A, 
+             d_zero, buff_Y, ldim_Y );
 
   // Main Loop.
   for( j = 0; j < mn_A; j += nb_alg ) {
@@ -468,10 +526,11 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
  
     //// FLA_Gemm( FLA_NO_TRANSPOSE, FLA_NO_TRANSPOSE, 
     ////           FLA_ONE, GR, ABR, FLA_ZERO, CYR ); 
-    dgemm_( "No tranpose", "No transpose", & m_cyr, & n_cyr, & m_ABR,
-            & d_one, & buff_G[ 0 + j * ldim_G ], & ldim_G,
-                     & buff_A[ j + j * ldim_A ], & ldim_A,
-            & d_zero, & buff_cyr[ 0 + 0 * ldim_cyr ], & ldim_cyr );
+    blas::gemm(blas::Layout::ColMajor,
+               blas::Op::NoTrans, blas::Op::NoTrans, m_cyr, n_cyr, m_ABR,
+               d_one, & buff_G[ 0 + j * ldim_G ], ldim_G,
+                      & buff_A[ j + j * ldim_A ], ldim_A,
+               d_zero, & buff_cyr[ 0 + 0 * ldim_cyr ], ldim_cyr );
 
     //// print_double_matrix( "cyr", m_cyr, n_cyr, buff_cyr, ldim_cyr );
     //// print_double_matrix( "y", m_Y, n_Y, buff_Y, ldim_Y );
@@ -496,8 +555,8 @@ int NoFLA_HQRRP_WY_blk_var4( int m_A, int n_A, double * buff_A, int ldim_A,
       ////                ABR,   & AR );
       //// FLA_Copy( YR, VR );
       //// FLA_QRPmod_WY_unb_var4( 1, bRow, VR, pB, sB, 1, AR, 1, YR, 0, None );
-
-      dlacpy_( "All", & m_V, & n_VR, buff_YR, & ldim_Y,
+      char matrixtype_ = matrixtype2char( lapack::MatrixType::General );
+      LAPACK_dlacpy( &matrixtype_, & m_V, & n_VR, buff_YR, & ldim_Y,
                                      buff_VR, & ldim_V );
       NoFLA_QRPmod_WY_unb_var4( 1, b,
           m_V, n_VR, buff_VR, ldim_V, buff_pB, buff_sB,
@@ -643,22 +702,29 @@ static int NoFLA_Downdate_Y(
 
   // B = G1.
   //// FLA_Copy( G1, B );
-  dlacpy_( "All", & m_G1, & n_G1, buff_G1, & ldim_G1,
-                                  buff_B, & ldim_B );
+  char matrixtype_ = lapack::matrixtype2char( lapack::MatrixType::General );
+  LAPACK_dlacpy(&matrixtype_, & m_G1, & n_G1,
+                              buff_G1, & ldim_G1,
+                              buff_B, & ldim_B );
 
   // B = B * U11.
   //// FLA_Trmm( FLA_RIGHT, FLA_LOWER_TRIANGULAR,
   ////           FLA_NO_TRANSPOSE, FLA_UNIT_DIAG,
   ////           FLA_ONE, U11, B );
-  dtrmm_( "Right", "Lower", "No transpose", "Unit", & m_B, & n_B,
-          & d_one, buff_U11, & ldim_U11, buff_B, & ldim_B );
+  blas::trmm( blas::Layout::ColMajor,
+              blas::Side::Right, 
+              blas::Uplo::Lower,
+              blas::Op::NoTrans,
+              blas::Diag::Unit, m_B, n_B,
+              d_one, buff_U11, ldim_U11, buff_B, ldim_B );
 
   // B = B + G2 * U21.
   //// FLA_Gemm( FLA_NO_TRANSPOSE, FLA_NO_TRANSPOSE,
   ////           FLA_ONE, G2, U21, FLA_ONE, B );
-  dgemm_( "No transpose", "No tranpose", & m_B, & n_B, & m_U21,
-          & d_one, buff_G2, & ldim_G2, buff_U21, & ldim_U21,
-          & d_one, buff_B, & ldim_B );
+  blas::gemm( blas::Layout::ColMajor,
+              blas::Op::NoTrans, blas::Op::NoTrans, m_B, n_B, m_U21,
+              d_one, buff_G2, ldim_G2, buff_U21, ldim_U21,
+              d_one, buff_B,  ldim_B );
 
   // B = B * T11.
   //// FLA_Trsm( FLA_RIGHT, FLA_UPPER_TRIANGULAR,
@@ -667,15 +733,23 @@ static int NoFLA_Downdate_Y(
   //// dtrsm_( "Right", "Upper", "No transpose", "Non-unit", & m_B, & n_B,
   ////         & d_one, buff_T, & ldim_T, buff_B, & ldim_B );
   // Used dtrmm instead of dtrsm because of using compact WY instead of UT.
-  dtrmm_( "Right", "Upper", "No transpose", "Non-unit", & m_B, & n_B,
-          & d_one, buff_T, & ldim_T, buff_B, & ldim_B );
+  blas::trmm( blas::Layout::ColMajor,
+              blas::Side::Right,
+              blas::Uplo::Upper,
+              blas::Op::NoTrans,
+              blas::Diag::NonUnit, m_B, n_B,
+              d_one, buff_T, ldim_T, buff_B, ldim_B );
 
   // B = - B * U11^H.
   //// FLA_Trmm( FLA_RIGHT, FLA_LOWER_TRIANGULAR,
   ////           FLA_CONJ_TRANSPOSE, FLA_UNIT_DIAG,
   ////           FLA_MINUS_ONE, U11, B );
-  dtrmm_( "Right", "Lower", "Conj_tranpose", "Unit", & m_B, & n_B,
-          & d_minus_one, buff_U11, & ldim_U11, buff_B, & ldim_B );
+  blas::trmm( blas::Layout::ColMajor,
+              blas::Side::Right,
+              blas::Uplo::Lower,
+              blas::Op::ConjTrans,
+              blas::Diag::Unit, m_B, n_B,
+              d_minus_one, buff_U11, ldim_U11, buff_B, ldim_B );
 
   // B = G1 + B.
   //// FLA_Axpy( FLA_ONE, G1, B );
@@ -688,9 +762,11 @@ static int NoFLA_Downdate_Y(
   // Y2 = Y2 - B * R12.
   //// FLA_Gemm( FLA_NO_TRANSPOSE, FLA_NO_TRANSPOSE,
   ////           FLA_MINUS_ONE, B, A12, FLA_ONE, Y2 );
-  dgemm_( "No transpose", "No transpose", & m_Y2, & n_Y2, & m_A12,
-          & d_minus_one, buff_B, & ldim_B, buff_A12, & ldim_A12,
-          & d_one, buff_Y2, & ldim_Y2 );
+  blas::gemm( blas::Layout::ColMajor,
+              blas::Op::NoTrans,
+              blas::Op::NoTrans, m_Y2, n_Y2, m_A12,
+              d_minus_one, buff_B, ldim_B, buff_A12, ldim_A12,
+              d_one, buff_Y2, ldim_Y2 );
 
   //
   // GR = GR * Q
@@ -727,10 +803,14 @@ static int NoFLA_Apply_Q_WY_lhfc_blk_var4(
   buff_W = ( double * ) malloc( n_B * n_U * sizeof( double ) );
   ldim_W = max( 1, n_B );
  
-  // Apply the block transformation. 
-  dlarfb_( "Left", "Transpose", "Forward", "Columnwise", 
-           & m_B, & n_B, & n_U, buff_U, & ldim_U, buff_T, & ldim_T, 
-           buff_B, & ldim_B, buff_W, & ldim_W );
+  // Apply the block transformation.
+  char side_ = blas::side2char( blas::Side::Left );
+  char trans_ = blas::op2char( lapack::Op::Trans );
+  char direction_ = lapack::direction2char( lapack::Direction::Forward );
+  char storev_ = lapack::storev2char( lapack::StoreV::Columnwise );
+  LAPACK_dlarfb( & side_, & trans_, & direction_, & storev_, 
+                 & m_B, & n_B, & n_U, buff_U, & ldim_U, buff_T, & ldim_T, 
+                 buff_B, & ldim_B, buff_W, & ldim_W );
 
   // Remove auxiliary object.
   //// FLA_Obj_free( & W );
@@ -759,9 +839,13 @@ static int NoFLA_Apply_Q_WY_rnfc_blk_var4(
   ldim_W = max( 1, m_B );
   
   // Apply the block transformation. 
-  dlarfb_( "Right", "No transpose", "Forward", "Columnwise", 
-           & m_B, & n_B, & n_U, buff_U, & ldim_U, buff_T, & ldim_T, 
-           buff_B, & ldim_B, buff_W, & ldim_W );
+  char side_ = blas::side2char( blas::Side::Right );
+  char trans_ = blas::op2char( lapack::Op::NoTrans );
+  char direction_ = lapack::direction2char( lapack::Direction::Forward );
+  char storev_ = lapack::storev2char( lapack::StoreV::Columnwise );
+  LAPACK_dlarfb( & side_, & trans_, & direction_, & storev_,  
+                 & m_B, & n_B, & n_U, buff_U, & ldim_U, buff_T, & ldim_T, 
+                 buff_B, & ldim_B, buff_W, & ldim_W );
 
   // Remove auxiliary object.
   //// FLA_Obj_free( & W );
@@ -794,7 +878,6 @@ static int NoFLA_QRPmod_WY_unb_var4( int pivoting, int num_stages,
   int     j, mn_A, m_a21, m_A22, n_A22, n_dB, idx_max_col, 
           i_one = 1, n_house_vector, m_rest;
   double  * buff_d, * buff_e, * buff_workspace, diag;
-  int     idamax_();
 
   //// printf( "NoFLA_QRPmod_WY_unb_var4. pivoting: %d \n", pivoting );
 
@@ -825,7 +908,7 @@ static int NoFLA_QRPmod_WY_unb_var4( int pivoting, int num_stages,
 
     if( pivoting == 1 ) {
       // Obtain the index of the column with largest 2-norm.
-      idx_max_col = idamax_( & n_dB, & buff_d[ j ], & i_one ) - 1;
+      idx_max_col = blas::iamax( n_dB, & buff_d[ j ], i_one ); // - 1;
 
       // Swap columns of A, B, C, pivots, and norms vectors.
       NoFLA_QRP_pivot_G_B_C( idx_max_col,
@@ -842,7 +925,8 @@ static int NoFLA_QRPmod_WY_unb_var4( int pivoting, int num_stages,
     // left to the column vector consisting of alpha11 and a21 annihilates
     // the entries in a21 (and updates alpha11).
     n_house_vector = m_a21 + 1;
-    dlarfg_( & n_house_vector,
+    LAPACK_dlarfg(
+             & n_house_vector,
              & buff_A[ j + j * ldim_A ],
              & buff_A[ min( m_A-1, j+1 ) + j * ldim_A ], & i_one,
              & buff_t[ j ] );
@@ -854,7 +938,8 @@ static int NoFLA_QRPmod_WY_unb_var4( int pivoting, int num_stages,
     diag = buff_A[ j + j * ldim_A ];
     buff_A[ j + j * ldim_A ] = 1.0;
     m_rest = m_A22 + 1;
-    dlarf_( "Left", & m_rest, & n_A22, 
+    char side_ = blas::side2char( blas::Side::Left );
+    LAPACK_dlarf( & side_, & m_rest, & n_A22, 
         & buff_A[ j + j * ldim_A ], & i_one,
         & buff_t[ j ],
         & buff_A[ j + ( j+1 ) * ldim_A ], & ldim_A,
@@ -873,7 +958,9 @@ static int NoFLA_QRPmod_WY_unb_var4( int pivoting, int num_stages,
 
   // Build T.
   if( build_T ) {
-    dlarft_( "Forward", "Columnwise", & m_A, & num_stages, buff_A, & ldim_A, 
+    char direction_ = lapack::direction2char( lapack::Direction::Forward );
+    char storev_ = lapack::storev2char( lapack::StoreV::Columnwise );
+    LAPACK_dlarft( & direction_, & storev_, & m_A, & num_stages, buff_A, & ldim_A, 
              buff_t, buff_T, & ldim_T );
   }
 
@@ -894,11 +981,10 @@ static int NoFLA_QRP_compute_norms(
 // vectors d and e.
 //
   int     j, i_one = 1;
-  double  dnrm2_();
 
   // Main loop.
   for( j = 0; j < n_A; j++ ) {
-    * buff_d = dnrm2_( & m_A, buff_A, & i_one );
+    * buff_d = blas::nrm2(m_A, buff_A, i_one);
     * buff_e = * buff_d;
     buff_A += ldim_A;
     buff_d++;
@@ -920,7 +1006,7 @@ static int NoFLA_QRP_downdate_partial_norms( int m_A, int n_A,
   int     j, i_one = 1;
   double  * ptr_d, * ptr_e, * ptr_wt, * ptr_A;
   double  temp, temp2, temp5, tol3z;
-  double  dnrm2_(), dlamch_();
+  // double  dnrm2_(), dlamch_();
 
   /*
 *
@@ -951,7 +1037,7 @@ static int NoFLA_QRP_downdate_partial_norms( int m_A, int n_A,
   */
 
   // Some initializations.
-  tol3z = sqrt( dlamch_( "Epsilon" ) );
+  tol3z = sqrt( LAPACK_dlamch( "Epsilon" ) );
   ptr_d  = buff_d;
   ptr_e  = buff_e;
   ptr_wt = buff_wt;
@@ -966,7 +1052,7 @@ static int NoFLA_QRP_downdate_partial_norms( int m_A, int n_A,
       temp2 = temp * temp5 * temp5;
       if( temp2 <= tol3z ) {
         if( m_A > 0 ) {
-          * ptr_d = dnrm2_( & m_A, ptr_A, & i_one );
+          * ptr_d = blas::nrm2( m_A, ptr_A, i_one );
           * ptr_e = *ptr_d;
         } else {
           * ptr_d = 0.0;
@@ -1006,20 +1092,20 @@ static int NoFLA_QRP_pivot_G_B_C( int j_max_col,
     // Swap full column 0 and column "j_max_col" of G.
     ptr_g1 = & buff_G[ 0 + 0         * ldim_G ];
     ptr_g2 = & buff_G[ 0 + j_max_col * ldim_G ];
-    dswap_( & m_G, ptr_g1, & i_one, ptr_g2, & i_one );
+    blas::swap( m_G, ptr_g1, i_one, ptr_g2, i_one );
 
     // Swap full column 0 and column "j_max_col" of B.
     if( pivot_B ) {
       ptr_b1 = & buff_B[ 0 + 0         * ldim_B ];
       ptr_b2 = & buff_B[ 0 + j_max_col * ldim_B ];
-      dswap_( & m_B, ptr_b1, & i_one, ptr_b2, & i_one );
+      blas::swap( m_B, ptr_b1, i_one, ptr_b2, i_one );
     }
 
     // Swap full column 0 and column "j_max_col" of C.
     if( pivot_C ) {
       ptr_c1 = & buff_C[ 0 + 0         * ldim_C ];
       ptr_c2 = & buff_C[ 0 + j_max_col * ldim_C ];
-      dswap_( & m_C, ptr_c1, & i_one, ptr_c2, & i_one );
+      blas::swap( m_C, ptr_c1, i_one, ptr_c2, i_one );
     }
 
     // Swap element 0 and element "j_max_col" of pivot vector "p".
