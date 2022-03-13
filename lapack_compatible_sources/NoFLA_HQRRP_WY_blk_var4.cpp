@@ -146,7 +146,7 @@ void dgeqp4( int64_t * m, int64_t * n, double * A, int64_t * lda, int64_t * jpvt
   mn_A   = min( m_A, n_A );
   ldim_A = * lda;
 
-  int ineg_one = -1;
+  int64_t ineg_one = -1;
 
   // Check input arguments.
   * info = 0;
