@@ -92,8 +92,13 @@ int main( int argc, char *argv[] ) {
   // Build matrix Q.
   lwork     = max( 1, 128 * n_A );
   buff_wk_orgqr = ( double * ) malloc( lwork * sizeof( double ) );
-  dlacpy_( "All", & m_A, & mn_A, buff_A, & ldim_A, buff_Q, & ldim_Q );
-  dorgqr_( & m_A, & mn_A, & mn_A, buff_Q, & ldim_Q, buff_tau,
+  char matrixtype_ = matrixtype2char( lapack::MatrixType::General );
+  LAPACK_dlacpy( &matrixtype_, & m_A, & mn_A, buff_A, & ldim_A, buff_Q, & ldim_Q
+                 #ifdef LAPACK_FORTRAN_STRLEN_END
+                 , 1
+                 #endif
+   );
+  LAPACK_dorgqr( & m_A, & mn_A, & mn_A, buff_Q, & ldim_Q, buff_tau,
            buff_wk_orgqr, & lwork, & info );
   if( info != 0 ) {
     fprintf( stderr, "Error in dorgqr: Info: %d\n", (int) info );
