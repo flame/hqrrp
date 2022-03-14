@@ -2,9 +2,6 @@ cmake_minimum_required(VERSION 3.10)
 
 project(hqrrp)
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-
 # from HQRRP-build:
 #   cmake -DCMAKE_INSTALL_PREFIX=`pwd`/../HQRRP-install -Dblaspp_DIR=/opt/mklpp/lib/blaspp/ -Dlapackpp_DIR=/opt/mklpp/lib/lapackpp/ -DCMAKE_BINARY_DIR=`pwd` -DCMAKE_BUILD_TYPE=Release ../lapack_compatible_sources/
 
@@ -12,44 +9,22 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # message(STATUS "MKL's imported targets are\n-- \t${MKL_IMPORTED_TARGETS}") 
 # message(STATUS "The value of MKL::mkl_intel_ilp64 is \n-- \t ${MKL::mkl_intel_ilp64}")
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake")
+
+# configure
 enable_testing()
+include(build_options)
 
+# find dependencies
+include(blaspp)
+include(lapackpp)
 
-find_package(blaspp REQUIRED)
-find_package(lapackpp REQUIRED)
-
-set(
-    hqrrp_cxx
-    ${PROJECT_SOURCE_DIR}/src/hqrrp.cpp
-    ${PROJECT_SOURCE_DIR}/src/util.cpp
-)
-add_library(
-    hqrrp ${hqrrp_cxx}
-)
-target_include_directories(
-    hqrrp PUBLIC
-    ${PROJECT_SOURCE_DIR}/include
-    ${Random123_DIR}
-)
-target_link_libraries(hqrrp PUBLIC blaspp lapackpp)
-
-
-set(
-    simple_test_cxx
-    ${PROJECT_SOURCE_DIR}/src/simple_test.cpp
-)
-add_executable(
-    simple_test ${simple_test_cxx}
-)
-target_include_directories(
-    simple_test PUBLIC ${PROJECT_SOURCE_DIR}/include
-)
-target_link_libraries(
-    simple_test PUBLIC hqrrp
-)
-
+# compile sources
+add_subdirectory(src)
 add_subdirectory(test)
 
+# export the configuration
+include(config)
 
 # I needed to build blaspp, lapackpp, and this library with
 #   LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/:/usr/bin
