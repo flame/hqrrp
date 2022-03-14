@@ -1,9 +1,9 @@
 name: core-linux
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
 
   workflow_dispatch:
 
@@ -54,6 +54,15 @@ jobs:
               `pwd`/../lapackpp
           make -j2 install
 
+      - name: install Random123  
+        run: |
+          cd ..
+          pwd
+          ls
+          git clone https://github.com/DEShawResearch/Random123.git
+          cd Random123/
+          make prefix=`pwd`/../Random123-install install-include
+
       - name: build HQRRP
         run: |
           cd ..
@@ -62,6 +71,7 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=Debug \
               -Dblaspp_DIR=`pwd`/../blaspp-install/lib/blaspp \
               -Dlapackpp_DIR=`pwd`/../lapackpp-install/lib/lapackpp \
+              -DRandom123_DIR=`pwd`/../Random123-install/include \
               -DCMAKE_INSTALL_PREFIX=`pwd`/../HQRRP-install \
               -DCMAKE_BINARY_DIR=`pwd` \
               `pwd`/../hqrrp
