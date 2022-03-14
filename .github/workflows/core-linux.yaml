@@ -64,7 +64,7 @@ jobs:
               -Dlapackpp_DIR=`pwd`/../lapackpp-install/lib/lapackpp \
               -DCMAKE_INSTALL_PREFIX=`pwd`/../HQRRP-install \
               -DCMAKE_BINARY_DIR=`pwd` \
-              `pwd`/../hqrrp/lapack_compatible_sources
+              `pwd`/../hqrrp
           make
           ./simple_test
           ctest
