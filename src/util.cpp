@@ -24,25 +24,27 @@ void genmat(
 }
 
 // ============================================================================
-static void print_double_matrix( char * name, int64_t m_A, int64_t n_A, 
+void print_double_matrix( char * name, int64_t m_A, int64_t n_A, 
                 double * buff_A, int64_t ldim_A )
 {
   int64_t  i, j;
 
-  printf( "%s = [\n", name );
+  printf( "%s = np.array([\n", name );
   for( i = 0; i < m_A; i++ )
   {
-    for( j = 0; j < n_A; j++ )
-	{
-      printf( "%le ", buff_A[ i + j * ldim_A ] );
+    printf(" [");
+    for( j = 0; j < n_A - 1; j++ )
+	  {
+      printf( "%le, ", buff_A[ i + j * ldim_A ] );
     }
-    printf( "\n" );
+    // ++j;
+    printf("%le ],\n", buff_A[ i + j * ldim_A ]);
   }
-  printf( "];\n" );
+  printf( "])\n" );
 }
 
 // ============================================================================
-static void print_double_vector( char * name, int64_t n_v, double * buff_v )
+void print_double_vector( char * name, int64_t n_v, double * buff_v )
 {
   int64_t  i, j;
 
@@ -56,7 +58,7 @@ static void print_double_vector( char * name, int64_t n_v, double * buff_v )
 }
 
 // ============================================================================
-static void print_int_vector( char * name, int64_t n_v, int64_t * buff_v )
+void print_int_vector( char * name, int64_t n_v, int64_t * buff_v )
 {
   int64_t  i, j;
 
@@ -69,7 +71,7 @@ static void print_int_vector( char * name, int64_t n_v, int64_t * buff_v )
 }
 
 // ============================================================================
-static void init_pvt( int64_t n_p, int64_t * buff_p )
+void init_pvt( int64_t n_p, int64_t * buff_p )
 {
   int64_t  i;
 
@@ -80,7 +82,7 @@ static void init_pvt( int64_t n_p, int64_t * buff_p )
 }
 
 // ============================================================================
-static void set_pvt_to_zero( int64_t n_p, int64_t * buff_p )
+void set_pvt_to_zero( int64_t n_p, int64_t * buff_p )
 {
   int64_t  i;
 

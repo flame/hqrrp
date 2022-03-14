@@ -17,13 +17,13 @@ namespace HQRRP {
 
 void genmat(int64_t n_rows, int64_t n_cols, double* mat, uint64_t seed);
 
-static void print_double_matrix(
+void print_double_matrix(
                 char * name, int64_t m_A, int64_t n_A, 
                 double * buff_A, int64_t ldim_A );
 
-static void print_double_vector( char * name, int64_t n_v, double * buff_v );
+void print_double_vector( char * name, int64_t n_v, double * buff_v );
 
-static void print_int_vector( char * name, int64_t n_v, int64_t * buff_v );
+void print_int_vector( char * name, int64_t n_v, int64_t * buff_v );
 
 
 } // end namespace HQRRP

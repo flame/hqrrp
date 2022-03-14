@@ -53,7 +53,7 @@ namespace HQRRP {
 
 // Matrices with dimensions larger than THRESHOLD_FOR_DGEQP3 are processed 
 // with the new HQRRP code.
-#define THRESHOLD_FOR_DGEQP3  -1
+#define THRESHOLD_FOR_DGEQP3  3
 #define int64_t lapack_int
 
 // ============================================================================
