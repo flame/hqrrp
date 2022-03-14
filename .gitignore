@@ -1,0 +1,16 @@
+*.o
+*.so
+*.a
+
+blaspp/
+blaspp/*
+blaspp-build/*
+blaspp-install/*
+
+HQRRP-build/*
+
+lapackpp/
+lapackpp/*
+lapackpp-build/*
+lapackpp-install/*
+
