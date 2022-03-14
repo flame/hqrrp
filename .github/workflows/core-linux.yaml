@@ -67,3 +67,4 @@ jobs:
               `pwd`/../hqrrp/lapack_compatible_sources
           make
           ./simple_test
+          ctest
