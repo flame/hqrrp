@@ -2,9 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <blas.hh>
-#include <lapack.hh>
-#include <lapack/fortran.h>
-#include <NoFLA_HQRRP_WY_blk_var4.h> // must be included AFTER lapack.
+#include <hqrrp.h>
 
 #define max( a, b ) ( (a) > (b) ? (a) : (b) )
 #define min( a, b ) ( (a) < (b) ? (a) : (b) )
@@ -19,13 +17,6 @@
 
 static void matrix_generate( int64_t m_A, int64_t n_A, double * buff_A, int64_t ldim_A );
 
-static void print_double_matrix( char * name, int64_t m_A, int64_t n_A, 
-                double * buff_A, int64_t ldim_A );
-
-static void print_double_vector( char * name, int64_t n, double * vector );
-
-static void print_int_vector( char * name, int64_t n, int64_t * vector );
-
 static void init_pvt( int64_t n, int64_t * vector );
 
 static void set_pvt_to_zero( int64_t n_p, int64_t * buff_p );
@@ -34,6 +25,8 @@ static void set_pvt_to_zero( int64_t n_p, int64_t * buff_p );
 
 // ============================================================================
 int main( int argc, char *argv[] ) {
+  using namespace HQRRP;
+  
   int64_t     nb_alg, pp, m_A, n_A, mn_A, ldim_A, ldim_Q, info, lwork;
   double  * buff_A, * buff_tau, * buff_Q, * buff_wk_qp4, * buff_wk_orgqr;
   int64_t     * buff_p;
@@ -166,44 +159,6 @@ static void matrix_generate( int64_t m_A, int64_t n_A, double * buff_A, int64_t 
 }
 
 // ============================================================================
-static void print_double_matrix( char * name, int64_t m_A, int64_t n_A, 
-                double * buff_A, int64_t ldim_A ) {
-  int64_t  i, j;
-
-  printf( "%s = [\n", name );
-  for( i = 0; i < m_A; i++ ) {
-    for( j = 0; j < n_A; j++ ) {
-      printf( "%le ", buff_A[ i + j * ldim_A ] );
-    }
-    printf( "\n" );
-  }
-  printf( "];\n" );
-}
-
-// ============================================================================
-static void print_double_vector( char * name, int64_t n_v, double * buff_v ) {
-  int64_t  i, j;
-
-  printf( "%s = [\n", name );
-  for( i = 0; i < n_v; i++ ) {
-    printf( "%le\n", buff_v[ i ] );
-  }
-  printf( "\n" );
-  printf( "];\n" );
-}
-
-// ============================================================================
-static void print_int_vector( char * name, int64_t n_v, int64_t * buff_v ) {
-  int64_t  i, j;
-
-  printf( "%s = [\n", name );
-  for( i = 0; i < n_v; i++ ) {
-    printf( "%d\n", (int) buff_v[ i ] );
-  }
-  printf( "];\n" );
-}
-
-// ============================================================================
 static void init_pvt( int64_t n_p, int64_t * buff_p ) {
   int64_t  i;
 
@@ -220,4 +175,3 @@ static void set_pvt_to_zero( int64_t n_p, int64_t * buff_p ) {
     buff_p[ i ] = 0;
   }
 }
-

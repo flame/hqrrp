@@ -46,10 +46,10 @@ WITHOUT ANY WARRANTY EXPRESSED OR IMPLIED.
 #include <stdio.h>
 #include <math.h>
 #include <blas.hh>
-#include <lapack.hh>
-#include <lapack/fortran.h>
-#include <lapack/config.h>
-#include "NoFLA_HQRRP_WY_blk_var4.h"
+#include "hqrrp.h"
+
+
+namespace HQRRP {
 
 // Matrices with dimensions larger than THRESHOLD_FOR_DGEQP3 are processed 
 // with the new HQRRP code.
@@ -1119,3 +1119,4 @@ static int64_t NoFLA_QRP_pivot_G_B_C( int64_t j_max_col,
   return 0;
 }
 
+}  // end namespace HQRRP

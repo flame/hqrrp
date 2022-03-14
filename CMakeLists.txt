@@ -12,16 +12,44 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # message(STATUS "MKL's imported targets are\n-- \t${MKL_IMPORTED_TARGETS}") 
 # message(STATUS "The value of MKL::mkl_intel_ilp64 is \n-- \t ${MKL::mkl_intel_ilp64}")
 
+enable_testing()
+
+
 find_package(blaspp REQUIRED)
 find_package(lapackpp REQUIRED)
 
-add_library(hqrrp NoFLA_HQRRP_WY_blk_var4.cpp)
-target_include_directories(hqrrp PUBLIC ${PROJECT_SOURCE_DIR})
+set(
+    hqrrp_cxx
+    ${PROJECT_SOURCE_DIR}/src/hqrrp.cpp
+    ${PROJECT_SOURCE_DIR}/src/util.cpp
+)
+add_library(
+    hqrrp ${hqrrp_cxx}
+)
+target_include_directories(
+    hqrrp PUBLIC
+    ${PROJECT_SOURCE_DIR}/include
+    ${Random123_DIR}
+)
 target_link_libraries(hqrrp PUBLIC blaspp lapackpp)
 
-add_executable(simple_test simple_test.cpp)
-target_include_directories(simple_test PUBLIC ${PROJECT_SOURCE_DIR})
-target_link_libraries(simple_test PUBLIC hqrrp)
+
+set(
+    simple_test_cxx
+    ${PROJECT_SOURCE_DIR}/src/simple_test.cpp
+)
+add_executable(
+    simple_test ${simple_test_cxx}
+)
+target_include_directories(
+    simple_test PUBLIC ${PROJECT_SOURCE_DIR}/include
+)
+target_link_libraries(
+    simple_test PUBLIC hqrrp
+)
+
+add_subdirectory(test)
+
 
 # I needed to build blaspp, lapackpp, and this library with
 #   LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/:/usr/bin
